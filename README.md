@@ -16,16 +16,19 @@ repository permissions. [Permission contracts](docs/permissions.md) describe
 anonymous, owner, organization and collaborator behavior. Discovery uses the
 same read policy as repository access.
 
-This milestone has no third-party runtime dependencies. The concrete Gitdx
-authentication, HTTP hosting and collaboration are later tasks.
-
 [SQLite catalog storage](docs/catalog.md) now persists identities, ownership,
 repository metadata, permissions, credential metadata and a transactional audit
-outbox. Authentication remains a separate service.
+outbox.
 
 [Managed provisioning](docs/provisioning.md) now connects catalog permissions to
 real Gitdx bare repositories with pending/ready recovery and an immutable backend
-source. Authentication and HTTP/protocol hosting remain separate tasks.
+source.
+
+[Personal token authentication](docs/authentication.md) provides one-time secret
+delivery, expiring/revocable credentials and read/write/admin scope caps shared
+by discovery and repository services. Account bootstrap and token issuance use
+a trusted local catalog handle. HTTP/protocol hosting and interactive account
+login remain later tasks.
 
 Run `uv sync --locked` and `uv run python -m unittest discover -s tests -v`.
 `uv run python scripts/check_distribution.py` checks wheel/sdist installations

@@ -75,10 +75,20 @@ class OrganizationRole(StrEnum):
 @dataclass(frozen=True, slots=True)
 class Principal:
     user_id: str | None = None
+    scopes: frozenset[Action] | None = None
+    credential_id: str | None = None
 
     def __post_init__(self) -> None:
         if self.user_id is not None:
             identifier(self.user_id)
+        if self.scopes is not None:
+            if isinstance(self.scopes, str):
+                raise ValueError("principal scopes must be a collection of actions")
+            object.__setattr__(self, "scopes", frozenset(Action(action) for action in self.scopes))
+        if self.credential_id is not None:
+            identifier(self.credential_id)
+            if self.user_id is None or self.scopes is None:
+                raise ValueError("credential principals require an account and explicit scopes")
 
 
 @dataclass(frozen=True, slots=True)

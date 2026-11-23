@@ -10,11 +10,11 @@ import stat
 import uuid
 
 from .domain import AccessGrant, Action, Membership, OrganizationRole, Owner, OwnerKind, Permission, Principal, RepositoryRecord, Slug, StorageId, Visibility, identifier
-from .permissions import PermissionDenied, require_permission
+from .permissions import PermissionDenied, require_permission, require_scope, scope_allows
 
 
 APPLICATION_ID = 0x47434154
-SCHEMA_VERSION = 3
+SCHEMA_VERSION = 4
 MIGRATIONS = {
     1: (
         "CREATE TABLE owners (id TEXT PRIMARY KEY, kind TEXT NOT NULL CHECK(kind IN ('user','organization')), slug TEXT NOT NULL UNIQUE)",
@@ -30,6 +30,7 @@ MIGRATIONS = {
         "CREATE INDEX outbox_pending ON outbox(done,sequence)",
     ),
     3: ("CREATE TABLE provisioning (repository_id TEXT PRIMARY KEY REFERENCES repositories(id), state TEXT NOT NULL CHECK(state IN ('pending','ready')))",),
+    4: ("CREATE TABLE credential_scopes (credential_id TEXT NOT NULL REFERENCES credentials(id), action TEXT NOT NULL CHECK(action IN ('read','write','admin')), PRIMARY KEY(credential_id,action))",),
 }
 
 
@@ -210,6 +211,7 @@ class Catalog:
             self._event(EventKind.ACCOUNT_CREATED, None, account_id, now)
 
     def create_organization(self, actor: Principal, organization_id: str, slug: Slug, *, now: int):
+        require_scope(actor, Action.ADMIN)
         identifier(organization_id)
         if not isinstance(slug, Slug):raise TypeError("organization slug must be a Slug")
         with self.transaction():
@@ -224,6 +226,7 @@ class Catalog:
         if row is None:raise PermissionDenied("organization not found or permission denied")
 
     def set_membership(self, actor: Principal, membership: Membership, *, now: int):
+        require_scope(actor, Action.ADMIN)
         with self.transaction():
             self._organization_owner(actor, membership.organization_id)
             self._user(membership.user_id)
@@ -235,6 +238,7 @@ class Catalog:
             self._event(EventKind.MEMBERSHIP_CHANGED, actor.user_id, membership.organization_id, now)
 
     def create_repository(self, actor: Principal, repository: RepositoryRecord, *, now: int):
+        require_scope(actor, Action.ADMIN)
         with self.transaction():
             self._user(actor.user_id)
             if repository.owner.kind is OwnerKind.USER:
@@ -268,6 +272,7 @@ class Catalog:
         page(limit, 0)
         if not isinstance(after, str):raise ValueError("repository cursor must be an ID string")
         if after:identifier(after)
+        if not scope_allows(actor, Action.READ):return ()
         with self._snapshot():
             rows = self._connection.execute("""SELECT r.id FROM repositories r JOIN owners o ON o.id=r.owner_id LEFT JOIN provisioning p ON p.repository_id=r.id
                 WHERE r.id>? AND ((?=0 AND p.repository_id IS NULL) OR p.state='ready') AND (r.visibility='public' OR (o.kind='user' AND o.id=?)
@@ -294,6 +299,8 @@ class Catalog:
             if deleted:self._event(EventKind.GRANT_CHANGED, actor.user_id, repository_id, now)
 
     def store_credential(self, actor: Principal, metadata: CredentialMetadata, verifier_digest: bytes):
+        if actor.scopes is not None or actor.credential_id is not None:
+            raise PermissionDenied("token issuance requires a trusted local account principal")
         if not isinstance(verifier_digest, bytes) or len(verifier_digest) != 32:
             raise ValueError("credential storage requires a 32-byte verifier digest, never a raw token")
         with self.transaction():
@@ -309,6 +316,7 @@ class Catalog:
         return CredentialMetadata(*row)
 
     def revoke_credential(self, actor: Principal, credential_id: str, *, now: int):
+        require_scope(actor, Action.ADMIN)
         timestamp(now)
         with self.transaction():
             metadata = self.credential_metadata(actor, credential_id)
@@ -316,6 +324,13 @@ class Catalog:
             if metadata.revoked_at is None:
                 self._connection.execute("UPDATE credentials SET revoked_at=? WHERE id=?", (now, credential_id))
                 self._event(EventKind.CREDENTIAL_REVOKED, actor.user_id, credential_id, now)
+
+    def _credential_auth_data(self, credential_id):
+        """Verifier material is private to the token authentication boundary."""
+        row = self._connection.execute("SELECT c.* FROM credentials c JOIN owners o ON o.id=c.user_id AND o.kind='user' WHERE c.id=?", (credential_id,)).fetchone()
+        if row is None:return None
+        scopes = frozenset(Action(r[0]) for r in self._connection.execute("SELECT action FROM credential_scopes WHERE credential_id=?", (credential_id,)))
+        return CredentialMetadata(row['id'], row['user_id'], row['created_at'], row['expires_at'], row['revoked_at']), bytes(row['verifier']), scopes
 
     def repository_events(self, actor: Principal, repository_id: str, *, limit=50, after=0) -> tuple[AuditEvent, ...]:
         page(limit, after)
@@ -340,6 +355,7 @@ class Catalog:
         return row[0] if row else None
 
     def reserve_repository(self, actor, record, *, now):
+        require_scope(actor, Action.ADMIN)
         with self.transaction():
             existing=self._connection.execute("SELECT id FROM repositories WHERE id=?",(record.id,)).fetchone()
             if existing:
