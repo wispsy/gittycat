@@ -9,9 +9,22 @@ class PermissionDenied(Exception):
     """Use a concealed result when a caller cannot access a repository."""
 
 
+def scope_allows(principal: Principal, action: Action) -> bool:
+    action = Action(action)
+    levels = {Action.READ: 1, Action.WRITE: 2, Action.ADMIN: 3}
+    return principal.scopes is None or any(levels[scope] >= levels[action] for scope in principal.scopes)
+
+
+def require_scope(principal: Principal, action: Action) -> None:
+    if not scope_allows(principal, action):
+        raise PermissionDenied("repository not found or permission denied")
+
+
 def allowed(principal: Principal, repository: RepositoryRecord, action: Action, *,
             grants: Iterable[AccessGrant] = (), memberships: Iterable[Membership] = ()) -> bool:
     action = Action(action)
+    if not scope_allows(principal, action):
+        return False
     if action is Action.READ and repository.visibility is Visibility.PUBLIC:
         return True
     user = principal.user_id
