@@ -31,7 +31,8 @@ timestamps. They accept no arbitrary message, request header or payload that
 could copy credentials into logs. Credential storage accepts a caller-computed
 32-byte verifier digest, never a token string; callers remain responsible for
 correct digest derivation. Credential metadata/query results exclude that digest.
-Authentication, token scope policy and token verification remain CAT-04 work.
+Use [TokenAuth](authentication.md) for generated bearer tokens and their scopes;
+legacy metadata/verifiers without scope rows cannot authenticate as tokens.
 
 `pending_jobs(limit, after)` and `acknowledge_job(id)` provide restart-safe bounded
 outbox envelopes and idempotent acknowledgement. Delivery can occur at least once;
@@ -42,5 +43,6 @@ Pages contain at most 100 results. New databases use owner-only file permissions
 static database/sidecar symlinks are refused. SQLite manages database transaction
 durability; callers must control the directory/ancestors. This is not protection
 against hostile concurrent path replacement or a cross-filesystem transaction.
-Repository enrollment records do not provision Git storage. Objects and branch
-tips stay exclusively in the Gitdx backend; CAT-03 owns provisioning/reconciliation.
+Repository enrollment records alone do not provision Git storage. Use
+`RepositoryService` for [managed provisioning/reconciliation](provisioning.md).
+Objects and branch tips stay exclusively in the Gitdx backend.

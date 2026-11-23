@@ -24,7 +24,7 @@ def main():
             venv = workspace / f"installed-{i}"
             run("uv", "venv", "--python", sys.executable, str(venv))
             python = venv / ("Scripts/python.exe" if os.name == "nt" else "bin/python")
-            run("uv", "pip", "install", "--python", str(python), "--no-deps", str(artifact))
+            run("uv", "pip", "install", "--python", str(python), str(artifact))
             smoke = "import gittycat; from pathlib import Path; "
             smoke += f"assert Path(gittycat.__file__).resolve().is_relative_to(Path({str(venv)!r}).resolve()); "
             smoke += "assert gittycat.Principal().user_id is None"

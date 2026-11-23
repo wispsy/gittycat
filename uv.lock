@@ -3,6 +3,17 @@ revision = 5
 requires-python = ">=3.14"
 
 [[package]]
+name = "gitdx"
+version = "0.1.0"
+source = { git = "https://github.com/wispsy/gitdx.git?rev=41eb15586994aac68382086acf65b0f7b0a49640#41eb15586994aac68382086acf65b0f7b0a49640" }
+
+[[package]]
 name = "gittycat"
 version = "0.1.0"
 source = { editable = "." }
+dependencies = [
+    { name = "gitdx" },
+]
+
+[package.metadata]
+requires-dist = [{ name = "gitdx", git = "https://github.com/wispsy/gitdx.git?rev=41eb15586994aac68382086acf65b0f7b0a49640" }]

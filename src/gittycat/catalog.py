@@ -10,11 +10,11 @@ import stat
 import uuid
 
 from .domain import AccessGrant, Action, Membership, OrganizationRole, Owner, OwnerKind, Permission, Principal, RepositoryRecord, Slug, StorageId, Visibility, identifier
-from .permissions import PermissionDenied, require_permission
+from .permissions import PermissionDenied, require_permission, require_scope, scope_allows
 
 
 APPLICATION_ID = 0x47434154
-SCHEMA_VERSION = 2
+SCHEMA_VERSION = 4
 MIGRATIONS = {
     1: (
         "CREATE TABLE owners (id TEXT PRIMARY KEY, kind TEXT NOT NULL CHECK(kind IN ('user','organization')), slug TEXT NOT NULL UNIQUE)",
@@ -29,6 +29,8 @@ MIGRATIONS = {
         "CREATE TABLE outbox (sequence INTEGER PRIMARY KEY AUTOINCREMENT, id TEXT NOT NULL UNIQUE, event_id TEXT NOT NULL UNIQUE REFERENCES audit_events(id), kind TEXT NOT NULL CHECK(kind IN ('catalog.changed','repository.index')), resource_id TEXT NOT NULL, done INTEGER NOT NULL DEFAULT 0 CHECK(done IN (0,1)))",
         "CREATE INDEX outbox_pending ON outbox(done,sequence)",
     ),
+    3: ("CREATE TABLE provisioning (repository_id TEXT PRIMARY KEY REFERENCES repositories(id), state TEXT NOT NULL CHECK(state IN ('pending','ready')))",),
+    4: ("CREATE TABLE credential_scopes (credential_id TEXT NOT NULL REFERENCES credentials(id), action TEXT NOT NULL CHECK(action IN ('read','write','admin')), PRIMARY KEY(credential_id,action))",),
 }
 
 
@@ -45,6 +47,7 @@ class EventKind(StrEnum):
     ORGANIZATION_CREATED = "organization.created"
     MEMBERSHIP_CHANGED = "membership.changed"
     REPOSITORY_CREATED = "repository.created"
+    REPOSITORY_READY = "repository.ready"
     GRANT_CHANGED = "grant.changed"
     CREDENTIAL_CREATED = "credential.created"
     CREDENTIAL_REVOKED = "credential.revoked"
@@ -208,6 +211,7 @@ class Catalog:
             self._event(EventKind.ACCOUNT_CREATED, None, account_id, now)
 
     def create_organization(self, actor: Principal, organization_id: str, slug: Slug, *, now: int):
+        require_scope(actor, Action.ADMIN)
         identifier(organization_id)
         if not isinstance(slug, Slug):raise TypeError("organization slug must be a Slug")
         with self.transaction():
@@ -222,6 +226,7 @@ class Catalog:
         if row is None:raise PermissionDenied("organization not found or permission denied")
 
     def set_membership(self, actor: Principal, membership: Membership, *, now: int):
+        require_scope(actor, Action.ADMIN)
         with self.transaction():
             self._organization_owner(actor, membership.organization_id)
             self._user(membership.user_id)
@@ -233,6 +238,7 @@ class Catalog:
             self._event(EventKind.MEMBERSHIP_CHANGED, actor.user_id, membership.organization_id, now)
 
     def create_repository(self, actor: Principal, repository: RepositoryRecord, *, now: int):
+        require_scope(actor, Action.ADMIN)
         with self.transaction():
             self._user(actor.user_id)
             if repository.owner.kind is OwnerKind.USER:
@@ -259,18 +265,20 @@ class Catalog:
         with self._snapshot():
             record = self._record(repository_id)
             self._authorize(actor, record, action)
+            if self.provisioning_state(repository_id)=="pending":raise PermissionDenied("repository not found or permission denied")
             return record
 
-    def list_repositories(self, actor: Principal, *, limit: int = 50, after: str = "") -> tuple[RepositoryRecord, ...]:
+    def list_repositories(self, actor: Principal, *, limit: int = 50, after: str = "", ready_only: bool = False) -> tuple[RepositoryRecord, ...]:
         page(limit, 0)
         if not isinstance(after, str):raise ValueError("repository cursor must be an ID string")
         if after:identifier(after)
+        if not scope_allows(actor, Action.READ):return ()
         with self._snapshot():
-            rows = self._connection.execute("""SELECT r.id FROM repositories r JOIN owners o ON o.id=r.owner_id
-                WHERE r.id>? AND (r.visibility='public' OR (o.kind='user' AND o.id=?)
+            rows = self._connection.execute("""SELECT r.id FROM repositories r JOIN owners o ON o.id=r.owner_id LEFT JOIN provisioning p ON p.repository_id=r.id
+                WHERE r.id>? AND ((?=0 AND p.repository_id IS NULL) OR p.state='ready') AND (r.visibility='public' OR (o.kind='user' AND o.id=?)
                 OR (o.kind='organization' AND EXISTS(SELECT 1 FROM memberships m WHERE m.organization_id=o.id AND m.user_id=? AND m.role='owner'))
                 OR EXISTS(SELECT 1 FROM grants g WHERE g.repository_id=r.id AND g.user_id=? AND g.permission>=1))
-                ORDER BY r.id LIMIT ?""", (after, actor.user_id, actor.user_id, actor.user_id, limit)).fetchall()
+                ORDER BY r.id LIMIT ?""", (after, int(ready_only), actor.user_id, actor.user_id, actor.user_id, limit)).fetchall()
             result = []
             for row in rows:
                 record = self._record(row['id']);self._authorize(actor, record, Action.READ);result.append(record)
@@ -291,6 +299,8 @@ class Catalog:
             if deleted:self._event(EventKind.GRANT_CHANGED, actor.user_id, repository_id, now)
 
     def store_credential(self, actor: Principal, metadata: CredentialMetadata, verifier_digest: bytes):
+        if actor.scopes is not None or actor.credential_id is not None:
+            raise PermissionDenied("token issuance requires a trusted local account principal")
         if not isinstance(verifier_digest, bytes) or len(verifier_digest) != 32:
             raise ValueError("credential storage requires a 32-byte verifier digest, never a raw token")
         with self.transaction():
@@ -306,6 +316,7 @@ class Catalog:
         return CredentialMetadata(*row)
 
     def revoke_credential(self, actor: Principal, credential_id: str, *, now: int):
+        require_scope(actor, Action.ADMIN)
         timestamp(now)
         with self.transaction():
             metadata = self.credential_metadata(actor, credential_id)
@@ -313,6 +324,13 @@ class Catalog:
             if metadata.revoked_at is None:
                 self._connection.execute("UPDATE credentials SET revoked_at=? WHERE id=?", (now, credential_id))
                 self._event(EventKind.CREDENTIAL_REVOKED, actor.user_id, credential_id, now)
+
+    def _credential_auth_data(self, credential_id):
+        """Verifier material is private to the token authentication boundary."""
+        row = self._connection.execute("SELECT c.* FROM credentials c JOIN owners o ON o.id=c.user_id AND o.kind='user' WHERE c.id=?", (credential_id,)).fetchone()
+        if row is None:return None
+        scopes = frozenset(Action(r[0]) for r in self._connection.execute("SELECT action FROM credential_scopes WHERE credential_id=?", (credential_id,)))
+        return CredentialMetadata(row['id'], row['user_id'], row['created_at'], row['expires_at'], row['revoked_at']), bytes(row['verifier']), scopes
 
     def repository_events(self, actor: Principal, repository_id: str, *, limit=50, after=0) -> tuple[AuditEvent, ...]:
         page(limit, after)
@@ -323,10 +341,39 @@ class Catalog:
 
     def pending_jobs(self, *, limit=50, after=0) -> tuple[OutboxJob, ...]:
         page(limit, after)
-        rows = self._connection.execute("SELECT sequence,id,event_id,kind,resource_id FROM outbox WHERE done=0 AND sequence>? ORDER BY sequence LIMIT ?", (after, limit)).fetchall()
+        rows = self._connection.execute("SELECT j.sequence,j.id,j.event_id,j.kind,j.resource_id FROM outbox j LEFT JOIN provisioning p ON p.repository_id=j.resource_id WHERE j.done=0 AND j.sequence>? AND (j.kind!='repository.index' OR p.repository_id IS NULL OR p.state='ready') ORDER BY j.sequence LIMIT ?", (after, limit)).fetchall()
         return tuple(OutboxJob(*r) for r in rows)
 
     def acknowledge_job(self, job_id: str) -> bool:
         identifier(job_id)
         with self.transaction():
             return self._connection.execute("UPDATE outbox SET done=1 WHERE id=? AND done=0", (job_id,)).rowcount == 1
+
+    def provisioning_state(self, repository_id: str):
+        identifier(repository_id)
+        row=self._connection.execute("SELECT state FROM provisioning WHERE repository_id=?",(repository_id,)).fetchone()
+        return row[0] if row else None
+
+    def reserve_repository(self, actor, record, *, now):
+        require_scope(actor, Action.ADMIN)
+        with self.transaction():
+            existing=self._connection.execute("SELECT id FROM repositories WHERE id=?",(record.id,)).fetchone()
+            if existing:
+                stored=self._record(record.id);self._authorize(actor,stored,Action.ADMIN)
+                state=self.provisioning_state(record.id)
+                if stored!=record or state is None:raise CatalogConflict("repository is not the same managed provisioning request")
+                return state
+            self.create_repository(actor,record,now=now)
+            self._connection.execute("INSERT INTO provisioning VALUES(?,'pending')",(record.id,))
+            return "pending"
+
+    def provisioning_record(self, actor, repository_id):
+        record=self._record(repository_id);self._authorize(actor,record,Action.ADMIN)
+        if self.provisioning_state(repository_id) is None:raise CatalogConflict("repository is not managed by provisioning")
+        return record
+
+    def finish_provisioning(self, actor, repository_id, *, now):
+        with self.transaction():
+            self.provisioning_record(actor,repository_id)
+            if self._connection.execute("UPDATE provisioning SET state='ready' WHERE repository_id=? AND state='pending'",(repository_id,)).rowcount:
+                self._event(EventKind.REPOSITORY_READY,actor.user_id,repository_id,now)

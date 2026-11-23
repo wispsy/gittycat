@@ -45,7 +45,7 @@ class DomainTests(unittest.TestCase):
         selected.add("receive")
         self.assertEqual(info.capabilities, frozenset({"loose-objects.read"}))
 
-    def test_package_cli_without_git_or_engine_runtime(self):
+    def test_package_cli_without_git_runtime(self):
         result = subprocess.run([sys.executable, "-I", "-m", "gittycat", "--help"],
                                 capture_output=True, env=dict(os.environ, PATH=""))
         self.assertEqual(result.returncode, 0, result.stderr)
