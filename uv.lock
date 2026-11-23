@@ -3,9 +3,18 @@ revision = 5
 requires-python = ">=3.14"
 
 [[package]]
+name = "expose-api"
+version = "0.2.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/7e/74/880ab0c3e2f8f2c4a5c3deef55f2bba30e71b7a1a3d291d8a4b3c18ce615/expose_api-0.2.0.tar.gz", hash = "sha256:ca8b894b91caa176e77426580da37e2a5dd2060c19d41b28e34fcadd287c255a", size = 69433, upload-time = "2026-11-17T16:25:21.412Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/1a/ba/bddbe46ddb2fc39b6d6c77656ccb03ccd5908b9705aa27a62fe6cf7d2deb/expose_api-0.2.0-py3-none-any.whl", hash = "sha256:03d1970143a64e40ef9230dcb6cfc2b5c988af789a04b392d6d458f1f515e91c", size = 84976, upload-time = "2026-11-17T16:25:20.32Z" },
+]
+
+[[package]]
 name = "gitdx"
 version = "0.1.0"
-source = { git = "https://github.com/wispsy/gitdx.git?rev=41eb15586994aac68382086acf65b0f7b0a49640#41eb15586994aac68382086acf65b0f7b0a49640" }
+source = { git = "https://github.com/wispsy/gitdx.git?rev=d26e845729a3720f58597690eba500d77e422777#d26e845729a3720f58597690eba500d77e422777" }
 
 [[package]]
 name = "gittycat"
@@ -15,5 +24,14 @@ dependencies = [
     { name = "gitdx" },
 ]
 
+[package.optional-dependencies]
+http = [
+    { name = "expose-api" },
+]
+
 [package.metadata]
-requires-dist = [{ name = "gitdx", git = "https://github.com/wispsy/gitdx.git?rev=41eb15586994aac68382086acf65b0f7b0a49640" }]
+requires-dist = [
+    { name = "expose-api", marker = "extra == 'http'", specifier = "==0.2.0" },
+    { name = "gitdx", git = "https://github.com/wispsy/gitdx.git?rev=d26e845729a3720f58597690eba500d77e422777" },
+]
+provides-extras = ["http"]

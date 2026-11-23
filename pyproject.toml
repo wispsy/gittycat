@@ -9,7 +9,7 @@ authors = [
     { name = "ellainng", email = "299958882+ellainng@users.noreply.github.com" }
 ]
 requires-python = ">=3.14"
-dependencies = ["gitdx @ git+https://github.com/wispsy/gitdx.git@41eb15586994aac68382086acf65b0f7b0a49640"]
+dependencies = ["gitdx @ git+https://github.com/wispsy/gitdx.git@d26e845729a3720f58597690eba500d77e422777"]
 
 [project.scripts]
 gittycat = "gittycat:main"
@@ -17,6 +17,11 @@ gittycat = "gittycat:main"
 [project.urls]
 Repository = "https://github.com/wispsy/gittycat"
 Issues = "https://github.com/wispsy/gittycat/issues"
+
+[project.optional-dependencies]
+http = [
+    "expose-api==0.2.0",
+]
 
 [build-system]
 requires = ["uv_build>=0.13.6,<0.14.0"]
