@@ -1,8 +1,9 @@
 {
   "gitdx": {
     "repository": "https://github.com/wispsy/gitdx",
-    "commit": "41eb15586994aac68382086acf65b0f7b0a49640",
-    "qualification": "https://github.com/wispsy/gitdx/actions/runs/45093709046",
-    "profile": "native SHA-1/SHA-256 bare init/open and local object/ref APIs"
+    "commit": "d26e845729a3720f58597690eba500d77e422777",
+    "qualification": "https://github.com/wispsy/gitdx/actions/runs/45222271314",
+    "profile": "native SHA-1/SHA-256 bare init/open and local object/ref APIs",
+    "required_capabilities": ["objects.read", "objects.write", "refs.read", "refs.update"]
   }
 }

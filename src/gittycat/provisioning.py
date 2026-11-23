@@ -8,8 +8,7 @@ import shutil
 
 from gitdx import Repository
 
-from .backend import RepositoryInfo
-from .catalog import CatalogConflict
+from .backend import RepositoryInfo, REQUIRED_CAPABILITIES, require_backend_info
 from .domain import Action, RepositoryRecord, StorageId
 from .permissions import PermissionDenied
 
@@ -45,7 +44,7 @@ class GitdxBackend:
         path=self._path(storage_id);format=self._receipt(path,storage_id)
         repo=Repository.open(path)
         if not repo.bare or repo.object_format.value!=format:raise ProvisioningError("managed storage must be a format-consistent bare repository")
-        return RepositoryInfo(format,True,frozenset({"objects.read","objects.write","refs.read","refs.update"}))
+        return RepositoryInfo(format,True,REQUIRED_CAPABILITIES)
 
     def create(self, storage_id, *, object_format):
         if object_format not in ("sha1","sha256"):raise ValueError("unsupported native object format")
@@ -95,7 +94,7 @@ class RepositoryService:
             record=self.catalog.provisioning_record(actor,repository_id)
             state=self.catalog.provisioning_state(repository_id)
             info=self.backend.inspect(record.storage_id) if state=="ready" else self.backend.create(record.storage_id,object_format=record.object_format)
-            if not info.bare or info.object_format!=record.object_format:raise CatalogConflict("backend format does not match catalog")
+            require_backend_info(info,record.object_format)
             self.catalog.finish_provisioning(actor,repository_id,now=now)
             return HostedRepository(record,info)
 
@@ -104,7 +103,7 @@ class RepositoryService:
             record=self.catalog.get_repository(actor,repository_id,action=action)
             if self.catalog.provisioning_state(repository_id)!="ready":raise PermissionDenied("repository not found or permission denied")
             info=self.backend.inspect(record.storage_id)
-            if not info.bare or info.object_format!=record.object_format:raise ProvisioningError("backend format does not match catalog")
+            require_backend_info(info,record.object_format)
             return HostedRepository(record,info)
 
     def list(self,actor,*,limit=50,after=""):

@@ -1,6 +1,6 @@
 """Git hosting domain and explicit permission contracts."""
 
-from .backend import RepositoryBackend, RepositoryInfo
+from .backend import BackendMismatch, RepositoryBackend, RepositoryInfo, REQUIRED_CAPABILITIES
 from .domain import AccessGrant, Action, Membership, OrganizationRole, Owner, OwnerKind, Permission, Principal, RepositoryRecord, Slug, StorageId, Visibility
 from .permissions import PermissionDenied, allowed, require_permission, require_scope, scope_allows, visible_repositories
 from .catalog import AuditEvent, Catalog, CatalogConflict, CatalogError, CredentialMetadata, EventKind, OutboxJob
@@ -14,6 +14,7 @@ __all__ = ["AccessGrant", "Action", "Membership", "OrganizationRole", "Owner", "
 __all__ += ["AuditEvent", "Catalog", "CatalogConflict", "CatalogError", "CredentialMetadata", "EventKind", "OutboxJob"]
 __all__ += ["GitdxBackend", "HostedRepository", "ProvisioningError", "RepositoryService"]
 __all__ += ["AuthenticationError", "IssuedToken", "TokenAuth", "require_scope", "scope_allows"]
+__all__ += ["BackendMismatch", "REQUIRED_CAPABILITIES"]
 
 
 def main() -> None:

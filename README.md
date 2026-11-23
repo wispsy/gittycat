@@ -31,5 +31,7 @@ a trusted local catalog handle. HTTP/protocol hosting and interactive account
 login remain later tasks.
 
 Run `uv sync --locked` and `uv run python -m unittest discover -s tests -v`.
+The [installation profile](docs/installation.md) qualifies independently built
+Gitdx/Gittycat artifacts and rejects backend capability mismatches.
 `uv run python scripts/check_distribution.py` checks wheel/sdist installations
 outside the checkout and startup with Git absent from PATH.
