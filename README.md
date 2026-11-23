@@ -16,8 +16,12 @@ repository permissions. [Permission contracts](docs/permissions.md) describe
 anonymous, owner, organization and collaborator behavior. Discovery uses the
 same read policy as repository access.
 
-This milestone has no runtime dependencies. The concrete Gitdx backend, SQLite
-catalog, authentication, HTTP hosting and collaboration are later tasks.
+This milestone has no third-party runtime dependencies. The concrete Gitdx
+backend, authentication, HTTP hosting and collaboration are later tasks.
+
+[SQLite catalog storage](docs/catalog.md) now persists identities, ownership,
+repository metadata, permissions, credential metadata and a transactional audit
+outbox. Authentication and concrete Git storage provisioning remain separate.
 
 Run `uv sync --locked` and `uv run python -m unittest discover -s tests -v`.
 `uv run python scripts/check_distribution.py` checks wheel/sdist installations
