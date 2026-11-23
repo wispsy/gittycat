@@ -14,7 +14,7 @@ from .permissions import PermissionDenied, require_permission
 
 
 APPLICATION_ID = 0x47434154
-SCHEMA_VERSION = 2
+SCHEMA_VERSION = 3
 MIGRATIONS = {
     1: (
         "CREATE TABLE owners (id TEXT PRIMARY KEY, kind TEXT NOT NULL CHECK(kind IN ('user','organization')), slug TEXT NOT NULL UNIQUE)",
@@ -29,6 +29,7 @@ MIGRATIONS = {
         "CREATE TABLE outbox (sequence INTEGER PRIMARY KEY AUTOINCREMENT, id TEXT NOT NULL UNIQUE, event_id TEXT NOT NULL UNIQUE REFERENCES audit_events(id), kind TEXT NOT NULL CHECK(kind IN ('catalog.changed','repository.index')), resource_id TEXT NOT NULL, done INTEGER NOT NULL DEFAULT 0 CHECK(done IN (0,1)))",
         "CREATE INDEX outbox_pending ON outbox(done,sequence)",
     ),
+    3: ("CREATE TABLE provisioning (repository_id TEXT PRIMARY KEY REFERENCES repositories(id), state TEXT NOT NULL CHECK(state IN ('pending','ready')))",),
 }
 
 
@@ -45,6 +46,7 @@ class EventKind(StrEnum):
     ORGANIZATION_CREATED = "organization.created"
     MEMBERSHIP_CHANGED = "membership.changed"
     REPOSITORY_CREATED = "repository.created"
+    REPOSITORY_READY = "repository.ready"
     GRANT_CHANGED = "grant.changed"
     CREDENTIAL_CREATED = "credential.created"
     CREDENTIAL_REVOKED = "credential.revoked"
@@ -259,18 +261,19 @@ class Catalog:
         with self._snapshot():
             record = self._record(repository_id)
             self._authorize(actor, record, action)
+            if self.provisioning_state(repository_id)=="pending":raise PermissionDenied("repository not found or permission denied")
             return record
 
-    def list_repositories(self, actor: Principal, *, limit: int = 50, after: str = "") -> tuple[RepositoryRecord, ...]:
+    def list_repositories(self, actor: Principal, *, limit: int = 50, after: str = "", ready_only: bool = False) -> tuple[RepositoryRecord, ...]:
         page(limit, 0)
         if not isinstance(after, str):raise ValueError("repository cursor must be an ID string")
         if after:identifier(after)
         with self._snapshot():
-            rows = self._connection.execute("""SELECT r.id FROM repositories r JOIN owners o ON o.id=r.owner_id
-                WHERE r.id>? AND (r.visibility='public' OR (o.kind='user' AND o.id=?)
+            rows = self._connection.execute("""SELECT r.id FROM repositories r JOIN owners o ON o.id=r.owner_id LEFT JOIN provisioning p ON p.repository_id=r.id
+                WHERE r.id>? AND ((?=0 AND p.repository_id IS NULL) OR p.state='ready') AND (r.visibility='public' OR (o.kind='user' AND o.id=?)
                 OR (o.kind='organization' AND EXISTS(SELECT 1 FROM memberships m WHERE m.organization_id=o.id AND m.user_id=? AND m.role='owner'))
                 OR EXISTS(SELECT 1 FROM grants g WHERE g.repository_id=r.id AND g.user_id=? AND g.permission>=1))
-                ORDER BY r.id LIMIT ?""", (after, actor.user_id, actor.user_id, actor.user_id, limit)).fetchall()
+                ORDER BY r.id LIMIT ?""", (after, int(ready_only), actor.user_id, actor.user_id, actor.user_id, limit)).fetchall()
             result = []
             for row in rows:
                 record = self._record(row['id']);self._authorize(actor, record, Action.READ);result.append(record)
@@ -323,10 +326,38 @@ class Catalog:
 
     def pending_jobs(self, *, limit=50, after=0) -> tuple[OutboxJob, ...]:
         page(limit, after)
-        rows = self._connection.execute("SELECT sequence,id,event_id,kind,resource_id FROM outbox WHERE done=0 AND sequence>? ORDER BY sequence LIMIT ?", (after, limit)).fetchall()
+        rows = self._connection.execute("SELECT j.sequence,j.id,j.event_id,j.kind,j.resource_id FROM outbox j LEFT JOIN provisioning p ON p.repository_id=j.resource_id WHERE j.done=0 AND j.sequence>? AND (j.kind!='repository.index' OR p.repository_id IS NULL OR p.state='ready') ORDER BY j.sequence LIMIT ?", (after, limit)).fetchall()
         return tuple(OutboxJob(*r) for r in rows)
 
     def acknowledge_job(self, job_id: str) -> bool:
         identifier(job_id)
         with self.transaction():
             return self._connection.execute("UPDATE outbox SET done=1 WHERE id=? AND done=0", (job_id,)).rowcount == 1
+
+    def provisioning_state(self, repository_id: str):
+        identifier(repository_id)
+        row=self._connection.execute("SELECT state FROM provisioning WHERE repository_id=?",(repository_id,)).fetchone()
+        return row[0] if row else None
+
+    def reserve_repository(self, actor, record, *, now):
+        with self.transaction():
+            existing=self._connection.execute("SELECT id FROM repositories WHERE id=?",(record.id,)).fetchone()
+            if existing:
+                stored=self._record(record.id);self._authorize(actor,stored,Action.ADMIN)
+                state=self.provisioning_state(record.id)
+                if stored!=record or state is None:raise CatalogConflict("repository is not the same managed provisioning request")
+                return state
+            self.create_repository(actor,record,now=now)
+            self._connection.execute("INSERT INTO provisioning VALUES(?,'pending')",(record.id,))
+            return "pending"
+
+    def provisioning_record(self, actor, repository_id):
+        record=self._record(repository_id);self._authorize(actor,record,Action.ADMIN)
+        if self.provisioning_state(repository_id) is None:raise CatalogConflict("repository is not managed by provisioning")
+        return record
+
+    def finish_provisioning(self, actor, repository_id, *, now):
+        with self.transaction():
+            self.provisioning_record(actor,repository_id)
+            if self._connection.execute("UPDATE provisioning SET state='ready' WHERE repository_id=? AND state='pending'",(repository_id,)).rowcount:
+                self._event(EventKind.REPOSITORY_READY,actor.user_id,repository_id,now)

@@ -1,0 +1,8 @@
+{
+  "gitdx": {
+    "repository": "https://github.com/wispsy/gitdx",
+    "commit": "41eb15586994aac68382086acf65b0f7b0a49640",
+    "qualification": "https://github.com/wispsy/gitdx/actions/runs/45093709046",
+    "profile": "native SHA-1/SHA-256 bare init/open and local object/ref APIs"
+  }
+}
