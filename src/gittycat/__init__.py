@@ -15,6 +15,13 @@ __all__ += ["AuditEvent", "Catalog", "CatalogConflict", "CatalogError", "Credent
 __all__ += ["GitdxBackend", "HostedRepository", "ProvisioningError", "RepositoryService"]
 __all__ += ["AuthenticationError", "IssuedToken", "TokenAuth", "require_scope", "scope_allows"]
 __all__ += ["BackendMismatch", "REQUIRED_CAPABILITIES"]
+__all__ += ["create_app"]
+
+
+def create_app(*args, **kwargs):
+    """Load the optional HTTP adapter only when explicitly selected."""
+    from .management import create_app as factory
+    return factory(*args, **kwargs)
 
 
 def main() -> None:

@@ -27,8 +27,9 @@ source.
 [Personal token authentication](docs/authentication.md) provides one-time secret
 delivery, expiring/revocable credentials and read/write/admin scope caps shared
 by discovery and repository services. Account bootstrap and token issuance use
-a trusted local catalog handle. HTTP/protocol hosting and interactive account
-login remain later tasks.
+a trusted local catalog handle. The [optional management API](docs/management-api.md)
+adds authorized JSON routes through Expose API and explicit loopback serving.
+Git protocol hosting and interactive account login remain later tasks.
 
 Run `uv sync --locked` and `uv run python -m unittest discover -s tests -v`.
 The [installation profile](docs/installation.md) qualifies independently built

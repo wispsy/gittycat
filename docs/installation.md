@@ -34,3 +34,9 @@ CI runs source tests on Linux/macOS/Windows, plus independent artifact pairing
 on all three platforms. The trusted local directory and durability limits in
 [provisioning](provisioning.md) still apply. No external service starts during
 import, installation or qualification.
+
+The optional HTTP profile installs the declared `http` extra only after proving
+core package imports do not load Expose API. The complete loopback HTTP suite
+then runs against the installed artifact pair. The selected framework source,
+version and release evidence are recorded alongside the backend; wheel hashes
+remain in `uv.lock`. See [management API](management-api.md).

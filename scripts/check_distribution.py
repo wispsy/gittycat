@@ -7,6 +7,7 @@ import subprocess
 import sys
 import tempfile
 import tarfile
+import tomllib
 import urllib.request
 
 
@@ -45,12 +46,14 @@ def main():
             python = venv / ("Scripts/python.exe" if os.name == "nt" else "bin/python")
             run("uv", "pip", "install", "--python", str(python), str(backend_artifacts[i]))
             run("uv", "pip", "install", "--no-deps", "--python", str(python), str(artifact))
-            smoke = "import gittycat, gitdx; from pathlib import Path; "
+            smoke = "import gittycat, gitdx, sys; from pathlib import Path; "
             smoke += f"assert all(Path(p.__file__).resolve().is_relative_to(Path({str(venv)!r}).resolve()) for p in (gittycat,gitdx)); "
-            smoke += "assert gittycat.Principal().user_id is None"
+            smoke += "assert gittycat.Principal().user_id is None; assert 'expose_api' not in sys.modules"
             no_git = dict(os.environ, PATH="")
             run(str(python), "-I", "-c", smoke, cwd=workspace, env=no_git)
             run(str(python), "-I", "-m", "gittycat", "--help", cwd=workspace, env=no_git)
+            http = tomllib.loads((root/"pyproject.toml").read_text())["project"]["optional-dependencies"]["http"]
+            run("uv", "pip", "install", "--python", str(python), *http)
             run(str(python), "-I", "-W", "error::ResourceWarning", "-m", "unittest", "discover",
                 "-s", str(root / "tests"), "-v", cwd=workspace)
 

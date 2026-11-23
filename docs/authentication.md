@@ -74,9 +74,9 @@ Valid credentials without access receive the same concealed repository denial
 as a missing repository. Anonymous public reads remain explicit via
 `Principal()`; credentials are never inferred from URL slugs.
 
-HTTP/API/Git route adapters, transport-level credential extraction, rate limits,
-interactive login and public-hosting qualification remain separate tasks. Future
-routes must reuse this boundary and the shared policy. Python's
+The [management API](management-api.md) now uses this boundary for Bearer
+credential extraction and JSON control routes. Git protocol routes, rate limits,
+interactive login and public-hosting qualification remain separate tasks. Python's
 [secrets](https://docs.python.org/3/library/secrets.html) and
 [digest-comparison](https://docs.python.org/3/library/hmac.html#hmac.compare_digest)
 documentation describe the standard-library primitives used here.
