@@ -1,14 +1,28 @@
 {
   "gitdx": {
     "repository": "https://github.com/wispsy/gitdx",
-    "commit": "d26e845729a3720f58597690eba500d77e422777",
-    "qualification": "https://github.com/wispsy/gitdx/actions/runs/45222271314",
+    "commit": "3386e6b0b0cd4c99c7ff208ba5e127b6c15ac3a8",
+    "qualification": "https://github.com/wispsy/gitdx/actions/runs/45495562313",
     "profile": "native SHA-1/SHA-256 bare init/open and local object/ref APIs",
     "required_capabilities": [
       "objects.read",
       "objects.write",
       "refs.read",
       "refs.update"
+    ],
+    "version": "0.1.0a1",
+    "pypi": "https://pypi.org/project/gitdx/0.1.0a1/",
+    "artifacts": [
+      {
+        "filename": "gitdx-0.1.0a1-py3-none-any.whl",
+        "bytes": 101327,
+        "sha256": "a4cdada6eafc93e2c58ac1c9558cfe16b8bd7e2e8193c6a10ee4f50c8307e30b"
+      },
+      {
+        "filename": "gitdx-0.1.0a1.tar.gz",
+        "bytes": 178361,
+        "sha256": "94268e46bf7fd8e2aeee97a3b43ccbd365ddfff02015d18439f02a23848d20bd"
+      }
     ]
   },
   "expose_api": {

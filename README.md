@@ -1,5 +1,11 @@
 # gittycat
 
+Initial PyPI preview: **0.1.0a1**, paired with `gitdx==0.1.0a1`.
+The current scope includes catalog storage, repository provisioning,
+authentication and the management API. Production upload/receive-pack handlers
+remain later work. [Wispsy Releases](https://github.com/orgs/wispsy/projects/31)
+tracks publication separately from current development.
+
 A Git-compatible hosting and collaboration platform powered by [gitdx](https://github.com/wispsy/gitdx).
 
 Python 3.14+ · MIT

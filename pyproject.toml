@@ -1,6 +1,6 @@
 [project]
 name = "gittycat"
-version = "0.1.0"
+version = "0.1.0a1"
 description = "A Git-compatible hosting platform powered by gitdx"
 license = "MIT"
 license-files = ["LICENSE"]
@@ -9,7 +9,7 @@ authors = [
     { name = "ellainng", email = "299958882+ellainng@users.noreply.github.com" }
 ]
 requires-python = ">=3.14"
-dependencies = ["gitdx @ git+https://github.com/wispsy/gitdx.git@d26e845729a3720f58597690eba500d77e422777"]
+dependencies = ["gitdx==0.1.0a1"]
 
 [project.scripts]
 gittycat = "gittycat:main"

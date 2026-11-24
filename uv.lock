@@ -13,12 +13,16 @@ wheels = [
 
 [[package]]
 name = "gitdx"
-version = "0.1.0"
-source = { git = "https://github.com/wispsy/gitdx.git?rev=d26e845729a3720f58597690eba500d77e422777#d26e845729a3720f58597690eba500d77e422777" }
+version = "0.1.0a1"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/32/d3/48a54cdde6d2b6a34fb51982aeeec8a27219a4ab073d058f847f391a1e9d/gitdx-0.1.0a1.tar.gz", hash = "sha256:94268e46bf7fd8e2aeee97a3b43ccbd365ddfff02015d18439f02a23848d20bd", size = 178361, upload-time = "2026-11-24T21:54:29.178Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/12/c6/8102532f56a173c4e63de9f4dbe35f8d0b9c8ff494ef6cb13d3fb8ca5e46/gitdx-0.1.0a1-py3-none-any.whl", hash = "sha256:a4cdada6eafc93e2c58ac1c9558cfe16b8bd7e2e8193c6a10ee4f50c8307e30b", size = 101327, upload-time = "2026-11-24T21:54:28.165Z" },
+]
 
 [[package]]
 name = "gittycat"
-version = "0.1.0"
+version = "0.1.0a1"
 source = { editable = "." }
 dependencies = [
     { name = "gitdx" },
@@ -32,6 +36,6 @@ http = [
 [package.metadata]
 requires-dist = [
     { name = "expose-api", marker = "extra == 'http'", specifier = "==0.2.0" },
-    { name = "gitdx", git = "https://github.com/wispsy/gitdx.git?rev=d26e845729a3720f58597690eba500d77e422777" },
+    { name = "gitdx", specifier = "==0.1.0a1" },
 ]
 provides-extras = ["http"]
