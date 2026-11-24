@@ -1,11 +1,12 @@
 """Package information and an explicitly selected loopback management server."""
 
 import argparse
+from importlib.metadata import version
 
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Git-compatible hosting and collaboration")
-    parser.add_argument("--version", action="version", version="gittycat 0.1.0")
+    parser.add_argument("--version", action="version", version=f"gittycat {version('gittycat')}")
     commands = parser.add_subparsers(dest="command")
     serve = commands.add_parser("serve", help="run the optional local JSON management API")
     serve.add_argument("--data-root", required=True)
