@@ -86,6 +86,29 @@ class TokenAuth:
                     return Principal(metadata.user_id, scopes, metadata.id)
         raise AuthenticationError("invalid or inactive credential")
 
+    def revalidate(self, actor: Principal, *, now: int) -> Principal:
+        """Refresh a trusted request principal; this does not authenticate input.
+
+        Callers must obtain credential principals from authenticate()/request().
+        Current credential scopes cap the original request scopes as well.
+        """
+        timestamp(now)
+        if not isinstance(actor, Principal):raise TypeError("select a trusted Principal")
+        if actor.credential_id is None:return actor
+        with self.catalog._snapshot():
+            data = self.catalog._credential_auth_data(actor.credential_id)
+            if data is not None:
+                metadata, _, scopes = data
+                if (metadata.user_id == actor.user_id and scopes and metadata.revoked_at is None
+                        and metadata.expires_at is not None and metadata.created_at <= now < metadata.expires_at):
+                    # Keep the original cap even if a trusted administrator later
+                    # expands the stored scope. Hierarchical caps may differ.
+                    from .permissions import scope_allows
+                    current = Principal(actor.user_id, scopes, actor.credential_id)
+                    capped = frozenset(action for action in Action if scope_allows(actor, action) and scope_allows(current, action))
+                    return Principal(actor.user_id, capped, actor.credential_id)
+        raise AuthenticationError("invalid or inactive credential")
+
     @contextmanager
     def request(self, token: str, *, now: int):
         """Serialize revocation with a single bounded authorized operation."""

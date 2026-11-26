@@ -4,6 +4,8 @@
 a separate connection per thread. Migrations use an application ID, schema
 version and one explicit transaction for all DDL/version changes. Unknown or
 foreign schemas are refused. Failed upgrades roll back and preserve old rows.
+Schema 5 adds versioned [branch protection rules](ref-policy.md), with rule
+updates, policy revisions and their audit/outbox events in the same transaction.
 
 Account bootstrap and outbox maintenance require a trusted local catalog handle.
 They are not unauthenticated server endpoints. Repository reads, lists, grants

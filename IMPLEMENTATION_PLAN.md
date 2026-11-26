@@ -186,3 +186,23 @@ sequence and milestone gates, use the shared plan.
 | [CAT-15](https://github.com/wispsy/gittycat/issues/15) | Installed forge alpha and security qualification | CAT-13, DX-33 |
 | [CAT-16](https://github.com/wispsy/gittycat/issues/16) | Owner-selected publication and deployment | CAT-15 / policy gate |
 | [CAT-17](https://github.com/wispsy/gittycat/issues/17) | Immutable cross-repository installation profile | CAT-03, DX-04 |
+
+## CAT-05 implementation contract (2026-11-26)
+
+Persist bounded exact/prefix ref rules and a compare-and-swap policy revision in
+the catalog. Only repository administrators may change rules. Matching rules
+intersect: creation, deletion, force updates, administrator-only writes and
+required review can restrict an existing write permission but never grant one.
+Owners have no implicit bypass. Required review refuses direct changes until
+the checked review/merge service exists.
+
+Evaluate bounded expected-old `gitdx.PushCommand` batches against managed bare
+storage, using Gitdx object parsing and complete bounded commit ancestry. Return
+stable per-ref reasons; do not change Git objects or refs. Recheck current token
+activity, grants, policy revision and expected tips on subsequent evaluation.
+These results are advisory snapshots, not reusable write capabilities. The
+receive-pack task must enforce policy inside its publication boundary.
+
+Qualify both native hash formats, role/scope/rule intersections, stale tips,
+revocation and expiry, database restart/migration/rollback, invalid graphs and
+no-executable operation. Keep Gitdx pinned to its published installation profile.

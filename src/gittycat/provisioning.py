@@ -40,11 +40,16 @@ class GitdxBackend:
         if not isinstance(record,dict) or record.get("storage_id")!=storage_id.value or record.get("object_format") not in ("sha1","sha256") or (object_format and record["object_format"]!=object_format):raise ProvisioningError("repository ownership/format mismatch")
         return record["object_format"]
 
-    def inspect(self, storage_id):
+    def open_repository(self, storage_id):
+        """Open managed native storage after the service authorizes its caller."""
         path=self._path(storage_id);format=self._receipt(path,storage_id)
         repo=Repository.open(path)
         if not repo.bare or repo.object_format.value!=format:raise ProvisioningError("managed storage must be a format-consistent bare repository")
-        return RepositoryInfo(format,True,REQUIRED_CAPABILITIES)
+        return repo
+
+    def inspect(self, storage_id):
+        repo=self.open_repository(storage_id)
+        return RepositoryInfo(repo.object_format.value,True,REQUIRED_CAPABILITIES)
 
     def create(self, storage_id, *, object_format):
         if object_format not in ("sha1","sha256"):raise ValueError("unsupported native object format")

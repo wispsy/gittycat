@@ -37,6 +37,11 @@ a trusted local catalog handle. The [optional management API](docs/management-ap
 adds authorized JSON routes through Expose API and explicit loopback serving.
 Git protocol hosting and interactive account login remain later tasks.
 
+Current source also provides [branch protection and ref-change policy](docs/ref-policy.md):
+versioned administrator rules, fresh token/grant checks and expected-old,
+ancestry-based decisions for managed branches and tags. These read-only decisions
+are a foundation for receive-pack and do not enable hosted writes.
+
 Run `uv sync --locked` and `uv run python -m unittest discover -s tests -v`.
 The [installation profile](docs/installation.md) qualifies independently built
 Gitdx/Gittycat artifacts and rejects backend capability mismatches.

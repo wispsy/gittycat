@@ -11,10 +11,11 @@ import uuid
 
 from .domain import AccessGrant, Action, Membership, OrganizationRole, Owner, OwnerKind, Permission, Principal, RepositoryRecord, Slug, StorageId, Visibility, identifier
 from .permissions import PermissionDenied, require_permission, require_scope, scope_allows
+from .branch_policy import BranchPolicy, BranchRule, MAX_BRANCH_RULES, ref_pattern
 
 
 APPLICATION_ID = 0x47434154
-SCHEMA_VERSION = 4
+SCHEMA_VERSION = 5
 MIGRATIONS = {
     1: (
         "CREATE TABLE owners (id TEXT PRIMARY KEY, kind TEXT NOT NULL CHECK(kind IN ('user','organization')), slug TEXT NOT NULL UNIQUE)",
@@ -31,6 +32,10 @@ MIGRATIONS = {
     ),
     3: ("CREATE TABLE provisioning (repository_id TEXT PRIMARY KEY REFERENCES repositories(id), state TEXT NOT NULL CHECK(state IN ('pending','ready')))",),
     4: ("CREATE TABLE credential_scopes (credential_id TEXT NOT NULL REFERENCES credentials(id), action TEXT NOT NULL CHECK(action IN ('read','write','admin')), PRIMARY KEY(credential_id,action))",),
+    5: (
+        "CREATE TABLE ref_policy_versions (repository_id TEXT PRIMARY KEY REFERENCES repositories(id), version INTEGER NOT NULL CHECK(version>=0))",
+        "CREATE TABLE branch_rules (repository_id TEXT NOT NULL REFERENCES repositories(id), pattern TEXT NOT NULL, allow_create INTEGER NOT NULL CHECK(allow_create IN (0,1)), allow_delete INTEGER NOT NULL CHECK(allow_delete IN (0,1)), allow_force INTEGER NOT NULL CHECK(allow_force IN (0,1)), require_review INTEGER NOT NULL CHECK(require_review IN (0,1)), minimum_permission INTEGER NOT NULL CHECK(minimum_permission IN (2,3)), PRIMARY KEY(repository_id,pattern))",
+    ),
 }
 
 
@@ -51,6 +56,7 @@ class EventKind(StrEnum):
     GRANT_CHANGED = "grant.changed"
     CREDENTIAL_CREATED = "credential.created"
     CREDENTIAL_REVOKED = "credential.revoked"
+    REF_POLICY_CHANGED = "ref-policy.changed"
 
 
 @dataclass(frozen=True, slots=True)
@@ -297,6 +303,46 @@ class Catalog:
             self.get_repository(actor, repository_id, action=Action.ADMIN)
             deleted = self._connection.execute("DELETE FROM grants WHERE repository_id=? AND user_id=?", (repository_id, user_id)).rowcount
             if deleted:self._event(EventKind.GRANT_CHANGED, actor.user_id, repository_id, now)
+
+    def branch_policy(self, actor: Principal, repository_id: str) -> BranchPolicy:
+        with self._snapshot():
+            self.get_repository(actor, repository_id, action=Action.WRITE)
+            row = self._connection.execute("SELECT version FROM ref_policy_versions WHERE repository_id=?", (repository_id,)).fetchone()
+            rows = self._connection.execute("SELECT * FROM branch_rules WHERE repository_id=? ORDER BY pattern LIMIT ?", (repository_id, MAX_BRANCH_RULES + 1)).fetchall()
+            if len(rows) > MAX_BRANCH_RULES:raise CatalogError("repository rule count exceeds the supported bound")
+            rules = tuple(BranchRule(r['repository_id'], r['pattern'], *(bool(r[k]) for k in ('allow_create','allow_delete','allow_force','require_review')), Permission(r['minimum_permission'])) for r in rows)
+            return BranchPolicy(repository_id, row[0] if row else 0, rules)
+
+    def _policy_revision(self, actor, repository_id, expected_version):
+        self.get_repository(actor, repository_id, action=Action.ADMIN)
+        if type(expected_version) is not int or not 0 <= expected_version < 0x7fffffffffffffff:
+            raise ValueError("select a nonnegative policy revision below the SQLite maximum")
+        current = self.branch_policy(actor, repository_id)
+        if current.version != expected_version:raise CatalogConflict("ref policy revision changed")
+        return current
+
+    def _advance_policy(self, actor, repository_id, version, now):
+        self._connection.execute("INSERT INTO ref_policy_versions VALUES(?,?) ON CONFLICT(repository_id) DO UPDATE SET version=excluded.version", (repository_id, version + 1))
+        self._event(EventKind.REF_POLICY_CHANGED, actor.user_id, repository_id, now)
+
+    def set_branch_rule(self, actor: Principal, rule: BranchRule, *, expected_version: int, now: int) -> BranchPolicy:
+        if not isinstance(rule, BranchRule):raise TypeError("select a BranchRule")
+        with self.transaction():
+            current = self._policy_revision(actor, rule.repository_id, expected_version)
+            if len(current.rules) >= MAX_BRANCH_RULES and all(r.pattern != rule.pattern for r in current.rules):
+                raise CatalogConflict("repository rule count exceeded")
+            self._connection.execute("INSERT INTO branch_rules VALUES(?,?,?,?,?,?,?) ON CONFLICT(repository_id,pattern) DO UPDATE SET allow_create=excluded.allow_create,allow_delete=excluded.allow_delete,allow_force=excluded.allow_force,require_review=excluded.require_review,minimum_permission=excluded.minimum_permission",
+                                     (rule.repository_id, rule.pattern, int(rule.allow_create), int(rule.allow_delete), int(rule.allow_force), int(rule.require_review), int(rule.minimum_permission)))
+            self._advance_policy(actor, rule.repository_id, current.version, now)
+            return self.branch_policy(actor, rule.repository_id)
+
+    def delete_branch_rule(self, actor: Principal, repository_id: str, pattern: str, *, expected_version: int, now: int) -> BranchPolicy:
+        ref_pattern(pattern)
+        with self.transaction():
+            current = self._policy_revision(actor, repository_id, expected_version)
+            deleted = self._connection.execute("DELETE FROM branch_rules WHERE repository_id=? AND pattern=?", (repository_id, pattern)).rowcount
+            if deleted:self._advance_policy(actor, repository_id, current.version, now)
+            return self.branch_policy(actor, repository_id)
 
     def store_credential(self, actor: Principal, metadata: CredentialMetadata, verifier_digest: bytes):
         if actor.scopes is not None or actor.credential_id is not None:
