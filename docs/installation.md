@@ -1,8 +1,8 @@
 # Qualified installation profile
 
-The mandatory backend is the immutable Gitdx revision in `pyproject.toml`,
-`uv.lock` and [backend-sources.json](backend-sources.json). It is selected by
-repository and commit, independent of any similarly named package-index entry.
+The mandatory backend is the published `gitdx==0.1.0a1` distribution selected in
+`pyproject.toml` and `uv.lock`. [backend-sources.json](backend-sources.json) records
+the corresponding immutable source revision and release evidence.
 Use `uv sync --locked` for development; no absolute sibling paths are resolved.
 Package/release publication remains a separate owner-selected action.
 
@@ -14,23 +14,23 @@ and hidden for authorized recovery, rather than advertising an unusable backend.
 This profile does not imply transport, reftable, hosting hardening or newer
 engine features beyond the selected revision's independent evidence.
 
-`scripts/check_distribution.py` downloads the selected immutable source archive
-from GitHub, builds Gitdx and Gittycat wheel/sdist artifacts independently, and
-installs matching artifact pairs into clean environments outside both source
-trees. The explicit backend artifacts satisfy the mandatory VCS dependency;
-`--no-deps` applies only to the subsequent Gittycat artifact installation so it
-cannot replace that selected backend with another source. These are source
-qualification artifacts, not releases or uploads. Imports must resolve inside
-the environment; no editable/source-tree imports are accepted.
+`scripts/check_distribution.py` builds Gittycat wheel/sdist artifacts and
+installs each into a clean environment outside the source tree, resolving its
+published Gitdx dependency normally. `--artifacts` selects prebuilt files for
+the same checks. Receipts retain artifact hashes and backend version/source.
+These are qualification artifacts, not uploads. Imports must resolve inside the
+environment; no editable/source-tree imports are accepted.
 
 The installed suites exercise both object formats, backend mismatch refusal,
-catalog recovery and token permissions. Capability execution tests block all
+catalog recovery, token permissions and branch policy. Policy checks include
+both native hash formats, rule intersections, expected-old tips, graph limits,
+credential revocation and SQLite migration/restart. Capability execution tests block all
 subprocess/shell creation and clear PATH while writing/reading objects, updating
 refs, creating and inspecting repositories. Package and CLI startup also run
 with Git absent from PATH. Native Git is used only by separate oracle tests;
-building a VCS dependency may require Git during installation.
+Gitdx is installed from its published distribution.
 
-CI runs source tests on Linux/macOS/Windows, plus independent artifact pairing
+CI runs source tests on Linux/macOS/Windows, plus independent artifact checks
 on all three platforms. The trusted local directory and durability limits in
 [provisioning](provisioning.md) still apply. No external service starts during
 import, installation or qualification.
