@@ -9,7 +9,7 @@ authors = [
     { name = "ellainng", email = "299958882+ellainng@users.noreply.github.com" }
 ]
 requires-python = ">=3.14"
-dependencies = ["gitdx @ git+https://github.com/wispsy/gitdx.git@2c97574ea27f5d61903ae3dc32ac266b985bb917"]
+dependencies = ["gitdx @ git+https://github.com/wispsy/gitdx.git@8765b1fa9d3bc664fd551b15912e5455174f1983"]
 
 [project.scripts]
 gittycat = "gittycat:main"

@@ -1,7 +1,8 @@
 # Branch protection and ref-change policy
 
 Current source adds policy evaluation; the published 0.1.0a1 preview predates
-this API. No receive-pack endpoint or ref-writing service is enabled by it.
+this API. The [hosted receiver](receive.md) enforces these decisions against its
+intake overlay and again under publication locks.
 
 Administrators store `BranchRule` records with
 `catalog.set_branch_rule(actor, rule, expected_version=version, now=timestamp)`.
@@ -42,6 +43,11 @@ validation belong to the receive transaction.
 expected tips and policy. A changed policy revision refuses the old proposal
 even if the new rules are less restrictive. Results contain no token secrets.
 They are advisory snapshots, not reusable write capabilities: native Git may
-change refs between evaluation and use. The future receive service must rerun
+change refs between evaluation and use. The receive service reruns
 policy and expected-old validation inside its publication boundary. A catalog
 transaction alone does not lock Git refs or establish cross-store atomicity.
+
+`evaluate_receive` is the trusted receive integration: it reads new objects
+through Gitdx's intake view and refuses a changed policy revision. The receiver
+holds a catalog transaction across final ref locks/publication. Its repeated
+checks refresh token expiry, grants, rules and expected tips at that boundary.

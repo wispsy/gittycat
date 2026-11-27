@@ -35,7 +35,7 @@ async def _json(request, required, optional=()):
     return value
 
 
-def create_app(data_root, *, clock=time.time, max_body_size=16*1024, git_limits=None, max_git_transfers=4):
+def create_app(data_root, *, clock=time.time, max_body_size=16*1024, git_limits=None, receive_limits=None, max_git_transfers=4):
     """Create an ASGI app; its lifespan owns startup, never token bootstrap."""
     if type(max_body_size) is not int or not 1 <= max_body_size <= 1024*1024:
         raise ValueError("body limit must be between 1 byte and 1 MiB")
@@ -76,15 +76,18 @@ def create_app(data_root, *, clock=time.time, max_body_size=16*1024, git_limits=
                 return HTTPPrincipal(actor.user_id, scopes=frozenset(a.value for a in actor.scopes))
         except AuthenticationError:return None
 
-    from gitdx import UploadPackLimits
+    from gitdx import ReceiveLimits, UploadPackLimits
+    from .receive import default_receive_limits
     from .git_http import install_git_routes
     selected_git_limits=git_limits or UploadPackLimits()
     if not isinstance(selected_git_limits,UploadPackLimits):raise TypeError('select UploadPackLimits')
-    app = App(title="Gittycat", max_body_size=max(max_body_size,selected_git_limits.protocol.max_bytes), lifespan=lifespan,
+    selected_receive_limits=receive_limits or default_receive_limits()
+    if not isinstance(selected_receive_limits,ReceiveLimits):raise TypeError('select ReceiveLimits')
+    app = App(title="Gittycat", max_body_size=max(max_body_size,selected_git_limits.protocol.max_bytes,selected_receive_limits.transfer.max_wire_bytes), lifespan=lifespan,
               authenticate=authenticate, auth_challenge="Bearer")
     app.state["ready"] = False
     app.state['management_body_limit']=max_body_size
-    install_git_routes(app,database,clock=now,limits=selected_git_limits,max_transfers=max_git_transfers)
+    install_git_routes(app,database,clock=now,limits=selected_git_limits,receive_limits=selected_receive_limits,max_transfers=max_git_transfers)
     protected = {"authenticate": True, "authorize": lambda request: True}
 
     def service(catalog):return RepositoryService(catalog, app.state["backend"])

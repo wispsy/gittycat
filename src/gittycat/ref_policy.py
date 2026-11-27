@@ -90,7 +90,29 @@ class RefPolicyService:
             return replace(current, decisions=tuple(replace(d, reason=RefReason.POLICY_CHANGED) for d in current.decisions))
         return current
 
-    def _decide(self, repo, command, rules, administrator):
+    def evaluate_receive(self, actor, record, repo, commands, view, *, expected_version, now):
+        """Recheck an authenticated receive against its quarantined overlay.
+
+        The hosting publication guard retains the outer catalog transaction;
+        coordinated Gitdx calls this again while its ref locks are held.
+        """
+        commands = tuple(islice(commands, self.max_commands+1))
+        if not commands or len(commands) > self.max_commands: raise ValueError('invalid receive policy batch')
+        with self.catalog.transaction():
+            actor = TokenAuth(self.catalog).revalidate(actor, now=now)
+            current = self.catalog.get_repository(actor, record.id, action=Action.WRITE)
+            if current != record or self.catalog.provisioning_state(record.id) != 'ready':
+                raise PermissionDenied('repository not found or permission denied')
+            policy = self.catalog.branch_policy(actor, record.id)
+            try: self.catalog.get_repository(actor, record.id, action=Action.ADMIN)
+            except PermissionDenied: administrator = False
+            else: administrator = True
+            decisions = tuple(self._decide(repo, c, policy.rules, administrator, view=view) for c in commands)
+            if policy.version != expected_version:
+                decisions = tuple(replace(d, reason=RefReason.POLICY_CHANGED) for d in decisions)
+            return RefPolicyResult(record.id, actor, policy.version, decisions)
+
+    def _decide(self, repo, command, rules, administrator, *, view=None):
         def decision(reason, ff=None):return RefDecision(command, reason, ff, tuple(r.pattern for r in selected))
         selected = ()
         try:
@@ -108,12 +130,14 @@ class RefPolicyService:
                 return decision(RefReason.INVALID_TARGET)
             ff = None
             if command.new is not None:
-                raw = repo.objects.read(command.new);parse_object(raw, repo.object_format)
+                raw = view.read(command.new) if view is not None else repo.objects.read(command.new)
+                parse_object(raw, repo.object_format)
                 if name.startswith("refs/heads/"):
                     if raw.kind is not ObjectType.COMMIT:return decision(RefReason.INVALID_TARGET)
                     # Graph errors and exhausted limits are refusals, not proof
                     # of a non-fast-forward update. All parents are validated.
-                    ff = repo.is_ancestor(command.old or command.new, command.new, limits=self.ancestry_limits)
+                    ff = (view.is_ancestor(command.old or command.new, command.new) if view is not None else
+                          repo.is_ancestor(command.old or command.new, command.new, limits=self.ancestry_limits))
                 elif command.old is not None:ff = command.old == command.new
         except (GitdxError, OSError):return decision(RefReason.INVALID_TARGET)
         if command.old == command.new:return decision(RefReason.ALLOWED, ff)

@@ -31,6 +31,16 @@ jobs:
         env:
           GITTYCAT_REQUIRE_GIT: '1'
           GITTYCAT_REQUIRE_HTTP: '1'
+      - if: runner.os == 'Linux'
+        run: uv run --frozen --all-extras python scripts/accept_hosting.py --output "${{ runner.temp }}/hosting-source.json"
+      - if: runner.os != 'Linux'
+        run: uv run --frozen --all-extras python scripts/accept_hosting.py --read-only --output "${{ runner.temp }}/hosting-source.json"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: hosting-source-${{ matrix.os }}
+          path: ${{ runner.temp }}/hosting-source.json
+          if-no-files-found: error
+          retention-days: 14
   distribution:
     name: Installed wheel and sdist (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
@@ -48,7 +58,13 @@ jobs:
           version: '0.13.9'
           python-version: '3.14'
       - run: uv sync --locked --all-extras
-      - run: uv run --frozen --all-extras python scripts/check_distribution.py
+      - run: uv run --frozen --all-extras python scripts/check_distribution.py --receipt-file "${{ runner.temp }}/hosting-installed.json"
         env:
           GITTYCAT_REQUIRE_GIT: '1'
           GITTYCAT_REQUIRE_HTTP: '1'
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: hosting-installed-${{ matrix.os }}
+          path: ${{ runner.temp }}/hosting-installed.json
+          if-no-files-found: error
+          retention-days: 14

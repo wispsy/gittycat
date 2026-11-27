@@ -1,5 +1,26 @@
 # Gittycat implementation plan
 
+## CAT-09 local acceptance (27 November 2026)
+
+The repeatable [two-user runner](docs/hosting-acceptance.md) uses temporary state
+and real stock Git against loopback HTTP. It qualifies native SHA-256 clone,
+commit, main/feature pushes, second-user fetch, protected/outsider refusal and
+restart; SHA-1 stays trusted-local/read-only with early hosted-write refusal.
+Source/wheel/sdist receipts retain the exact engine/framework selection and
+unsupported limits. Unqualified platforms explicitly select read-only acceptance.
+
+## CAT-08 hosted receive (27 November 2026)
+
+Source adds authenticated SHA-256 receive-pack through explicit untrusted Linux
+descriptor intake. Intake-overlay policy is repeated inside catalog exclusion
+and deterministic ref locks, with expected-old CAS and truthful per-ref reports.
+Schema 6 retains prepared/outcome receipts with audit/outbox; interrupted Git
+publication has explicit administrator recovery and unknown requests remain
+unknown. SHA-1/unqualified platform refusal precedes body reads. Source tests
+cover native pushes, races, bounds and recovery; installed qualification selects
+the immutable engine guard/codec revision in backend-sources.json. See
+[hosted receive](docs/receive.md). Publication/deployment remain separate.
+
 ## CAT-07 read-serving batch (26 November 2026)
 
 Add smart-HTTP discovery/upload-pack routes to the existing Expose API app.
