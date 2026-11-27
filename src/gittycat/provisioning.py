@@ -44,6 +44,8 @@ class GitdxBackend:
         """Open managed native storage after the service authorizes its caller."""
         path=self._path(storage_id);format=self._receipt(path,storage_id)
         repo=Repository.open(path)
+        if (repo.config.values.get('extensions','refstorage','files') or '').lower()!='files':
+            raise ProvisioningError('managed mutation capabilities require files reference storage')
         if not repo.bare or repo.object_format.value!=format:raise ProvisioningError("managed storage must be a format-consistent bare repository")
         return repo
 

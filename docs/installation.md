@@ -14,6 +14,8 @@ Managed bare storage requires native SHA-1/SHA-256 init/open and the capabilitie
 checks format, bare status and all required capabilities after creation and on
 every open. Mismatches raise `BackendMismatch`; a failed create stays pending
 and hidden for authorized recovery, rather than advertising an unusable backend.
+Managed mutation capabilities require files refs; externally migrated read-only
+reftable storage is refused instead of advertising a qualified writer.
 This profile does not imply transport, reftable, hosting hardening or newer
 engine features beyond the selected revision's independent evidence.
 

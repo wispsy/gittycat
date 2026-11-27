@@ -87,6 +87,7 @@ class GitHTTPTests(unittest.IsolatedAsyncioTestCase):
             with patch.object(GitdxBackend,'open_repository',side_effect=AssertionError('storage read before authorization')):
                 denied=await self.request(server,'GET',path(private.id));missing=await self.request(server,'GET',path(uuid.uuid4().hex))
                 self.assertEqual(denied,missing);self.assertEqual(denied[0],401)
+                self.assertTrue(denied[1]['www-authenticate'].startswith('Basic realm="Gittycat"'))
                 unauthorized=await self.request(server,'GET',path(private.id),authorization='Bearer '+self.tokens[OUTSIDER])
                 absent=await self.request(server,'GET',path(uuid.uuid4().hex),authorization='Bearer '+self.tokens[OUTSIDER])
                 self.assertEqual(unauthorized,absent);self.assertEqual(absent[0],404)
