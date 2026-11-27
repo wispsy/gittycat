@@ -2,8 +2,9 @@
 
 Initial PyPI preview: **0.1.0a1**, paired with `gitdx==0.1.0a1`.
 The current scope includes catalog storage, repository provisioning,
-authentication and the management API. Production upload/receive-pack handlers
-remain later work. [Wispsy Releases](https://github.com/orgs/wispsy/projects/31)
+authentication and the management API. Current source adds bounded read-only
+smart HTTP; hosted writes and production deployment remain later work.
+[Wispsy Releases](https://github.com/orgs/wispsy/projects/31)
 tracks publication separately from current development.
 
 A Git-compatible hosting and collaboration platform powered by [gitdx](https://github.com/wispsy/gitdx).
@@ -12,7 +13,7 @@ Python 3.14+ · MIT
 
 Development starts with the [implementation plan](IMPLEMENTATION_PLAN.md) and
 [shared Project](https://github.com/orgs/wispsy/projects/30). The roadmap records
-qualification targets; remote exchange and public hosting are later milestones.
+qualification targets; hosted writes and public deployment are later milestones.
 
 Source development does not imply a published package or deployed service.
 
@@ -35,7 +36,8 @@ delivery, expiring/revocable credentials and read/write/admin scope caps shared
 by discovery and repository services. Account bootstrap and token issuance use
 a trusted local catalog handle. The [optional management API](docs/management-api.md)
 adds authorized JSON routes through Expose API and explicit loopback serving.
-Git protocol hosting and interactive account login remain later tasks.
+[Read-only smart HTTP](docs/smart-http.md) adds authorized discovery/upload-pack
+through the same Expose API app. Interactive account login remains later work.
 
 Current source also provides [branch protection and ref-change policy](docs/ref-policy.md):
 versioned administrator rules, fresh token/grant checks and expected-old,

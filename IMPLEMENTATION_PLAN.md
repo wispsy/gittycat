@@ -1,5 +1,18 @@
 # Gittycat implementation plan
 
+## CAT-07 read-serving batch (26 November 2026)
+
+Add smart-HTTP discovery/upload-pack routes to the existing Expose API app.
+Gitdx CAT-07A owns all protocol and pack logic. Authorize opaque repository IDs
+before storage access, allow anonymous public reads, and use scoped/revocable
+tokens through explicit Bearer or Basic transport. Recheck after body reads and
+before disclosure. Bound request bodies, concurrent preparations, graph/output
+work and disconnect cleanup. Qualify stock Git clone/fetch in both hashes and
+all three protocols, empty repositories, branches/tags and concealed private
+resources. Keep management JSON limits independent. Select the qualified engine
+by immutable source revision until a separate package release is authorized;
+record published-versus-main status and qualify both installed artifacts.
+
 Baseline: 22 November 2026. Python 3.14+, MIT, public source.
 The [shared Gitdx → Gittycat plan](https://github.com/wispsy/gitdx/blob/main/IMPLEMENTATION_PLAN.md)
 owns the complete engine/hosting roadmap and task register. This document owns

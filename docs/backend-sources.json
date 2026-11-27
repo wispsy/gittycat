@@ -1,9 +1,9 @@
 {
   "gitdx": {
     "repository": "https://github.com/wispsy/gitdx",
-    "commit": "3386e6b0b0cd4c99c7ff208ba5e127b6c15ac3a8",
-    "qualification": "https://github.com/wispsy/gitdx/actions/runs/45495562313",
-    "profile": "native SHA-1/SHA-256 bare init/open and local object/ref APIs",
+    "commit": "54a136ded45c453e1afaa2c0c7148393f15ed8a0",
+    "qualification": "https://github.com/wispsy/gitdx/actions/runs/45937538521",
+    "profile": "native SHA-1/SHA-256 managed bare storage and bounded read-only upload-pack v0/v1/v2",
     "required_capabilities": [
       "objects.read",
       "objects.write",
@@ -11,25 +11,31 @@
       "refs.update"
     ],
     "version": "0.1.0a1",
-    "pypi": "https://pypi.org/project/gitdx/0.1.0a1/",
-    "artifacts": [
-      {
-        "filename": "gitdx-0.1.0a1-py3-none-any.whl",
-        "bytes": 101327,
-        "sha256": "a4cdada6eafc93e2c58ac1c9558cfe16b8bd7e2e8193c6a10ee4f50c8307e30b"
-      },
-      {
-        "filename": "gitdx-0.1.0a1.tar.gz",
-        "bytes": 178361,
-        "sha256": "94268e46bf7fd8e2aeee97a3b43ccbd365ddfff02015d18439f02a23848d20bd"
-      }
-    ]
+    "published": {
+      "version": "0.1.0a1",
+      "commit": "3386e6b0b0cd4c99c7ff208ba5e127b6c15ac3a8",
+      "qualification": "https://github.com/wispsy/gitdx/actions/runs/45495562313",
+      "pypi": "https://pypi.org/project/gitdx/0.1.0a1/",
+      "artifacts": [
+        {
+          "filename": "gitdx-0.1.0a1-py3-none-any.whl",
+          "bytes": 101327,
+          "sha256": "a4cdada6eafc93e2c58ac1c9558cfe16b8bd7e2e8193c6a10ee4f50c8307e30b"
+        },
+        {
+          "filename": "gitdx-0.1.0a1.tar.gz",
+          "bytes": 178361,
+          "sha256": "94268e46bf7fd8e2aeee97a3b43ccbd365ddfff02015d18439f02a23848d20bd"
+        }
+      ]
+    },
+    "source_kind": "git"
   },
   "expose_api": {
     "repository": "https://github.com/wispsy/expose_api",
     "commit": "3877fec0d3c2d945cca871c69809351e03fd47b7",
     "version": "0.2.0",
     "qualification": "https://github.com/wispsy/expose_api/releases/tag/v0.2.0",
-    "profile": "optional HTTP handlers, JSON responses, ASGI lifespan and loopback server"
+    "profile": "optional management and smart-HTTP routes, bounded raw requests, byte streaming and disconnect cleanup"
   }
 }

@@ -28,13 +28,14 @@ def _id(request, name="repository_id"):
 
 
 async def _json(request, required, optional=()):
+    await request.body(max_size=request.app.state['management_body_limit'])
     value = await request.json()
     if type(value) is not dict or not set(required) <= value.keys() or value.keys()-set(required)-set(optional):
         raise ValueError("invalid request fields")
     return value
 
 
-def create_app(data_root, *, clock=time.time, max_body_size=16*1024):
+def create_app(data_root, *, clock=time.time, max_body_size=16*1024, git_limits=None, max_git_transfers=4):
     """Create an ASGI app; its lifespan owns startup, never token bootstrap."""
     if type(max_body_size) is not int or not 1 <= max_body_size <= 1024*1024:
         raise ValueError("body limit must be between 1 byte and 1 MiB")
@@ -75,9 +76,15 @@ def create_app(data_root, *, clock=time.time, max_body_size=16*1024):
                 return HTTPPrincipal(actor.user_id, scopes=frozenset(a.value for a in actor.scopes))
         except AuthenticationError:return None
 
-    app = App(title="Gittycat management", max_body_size=max_body_size, lifespan=lifespan,
+    from gitdx import UploadPackLimits
+    from .git_http import install_git_routes
+    selected_git_limits=git_limits or UploadPackLimits()
+    if not isinstance(selected_git_limits,UploadPackLimits):raise TypeError('select UploadPackLimits')
+    app = App(title="Gittycat", max_body_size=max(max_body_size,selected_git_limits.protocol.max_bytes), lifespan=lifespan,
               authenticate=authenticate, auth_challenge="Bearer")
     app.state["ready"] = False
+    app.state['management_body_limit']=max_body_size
+    install_git_routes(app,database,clock=now,limits=selected_git_limits,max_transfers=max_git_transfers)
     protected = {"authenticate": True, "authorize": lambda request: True}
 
     def service(catalog):return RepositoryService(catalog, app.state["backend"])
