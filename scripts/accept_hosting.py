@@ -51,14 +51,27 @@ def fixture_commit(repo, data, parents=()):
 def identities():
     engine = metadata.distribution('gitdx')
     direct = engine.read_text('direct_url.json')
-    selected = json.loads(direct) if direct else {}
     profile = json.loads((Path(__file__).resolve().parents[1]/'docs/backend-sources.json').read_text())
-    expected = profile['gitdx']['commit']
-    actual = selected.get('vcs_info', {}).get('commit_id')
-    if actual != expected: raise RuntimeError('installed engine does not match the immutable acceptance profile')
+    backend = profile['gitdx']
+    if engine.version != backend['version']:
+        raise RuntimeError('installed engine version differs from the selected acceptance profile')
+    if backend.get('source_kind') == 'git':
+        selected = json.loads(direct) if direct else {}
+        actual = selected.get('vcs_info', {}).get('commit_id')
+        if actual != backend['commit']:
+            raise RuntimeError('installed engine does not match the immutable acceptance profile')
+        provenance = 'pep610-commit'
+    elif backend.get('source_kind') == 'pypi':
+        if direct is not None:
+            raise RuntimeError('installed engine must resolve from the selected package index')
+        actual = backend['commit']
+        provenance = 'published-release-manifest'
+    else:
+        raise RuntimeError('unsupported engine source in the selected acceptance profile')
     if metadata.version('expose-api') != profile['expose_api']['version']:
         raise RuntimeError('installed HTTP framework differs from the selected profile')
-    return {'gitdx': {'version': engine.version, 'commit': actual},
+    return {'gitdx': {'version': engine.version, 'commit': actual,
+                      'source_kind': backend['source_kind'], 'provenance': provenance},
             'expose_api': {'version': metadata.version('expose-api'), 'source': profile['expose_api']['commit']},
             'gittycat': {'version': metadata.version('gittycat')}}
 

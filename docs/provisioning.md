@@ -21,8 +21,9 @@ provide hostile filesystem isolation or power-loss durability across SQLite and
 filesystem boundaries. Missing ready storage is an error, not permission to
 create a new empty repository.
 
-The mandatory Gitdx dependency selects the immutable qualified source in
-[backend-sources.json](backend-sources.json), avoiding unpublished PyPI version
-ambiguity and absolute sibling paths. Source installation may use Git; repository
-operations never call it. Both native hashes are qualified against stock Git.
-Smart HTTP and protocol services remain later tasks.
+The mandatory Gitdx dependency selects published `gitdx==0.1.0a2`.
+[backend-sources.json](backend-sources.json) records its release source,
+qualification and exact artifact hashes. Repository operations never call Git;
+both native hashes are qualified against a separate stock-Git oracle.
+Smart HTTP read serving supports both formats. Hosted writes require SHA-256
+and qualified Linux storage; production qualification is unfinished.

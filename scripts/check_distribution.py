@@ -41,6 +41,8 @@ def main():
             smoke += f"assert version('gitdx') == {profile['version']!r}; "
             if profile.get('source_kind')=='git':
                 smoke += f"assert json.loads(distribution('gitdx').read_text('direct_url.json'))['vcs_info']['commit_id'] == {profile['commit']!r}; "
+            else:
+                smoke += "assert distribution('gitdx').read_text('direct_url.json') is None; "
             smoke += "assert gittycat.Principal().user_id is None; assert 'expose_api' not in sys.modules"
             no_git = dict(os.environ, PATH="")
             run(str(python), "-I", "-c", smoke, cwd=workspace, env=no_git)
@@ -56,7 +58,8 @@ def main():
                 '--output', str(acceptance_file), cwd=workspace)
             receipts.append({"artifact": artifact.name, "sha256": hashlib.sha256(artifact.read_bytes()).hexdigest(),
                              "backend": {"distribution": "gitdx", "version": profile["version"],
-                                         "source": profile["commit"]}, "profile": "catalog-auth-management-smart-http-receive/3",
+                                         "source": profile["commit"], "source_kind": profile["source_kind"]},
+                             "profile": "catalog-auth-management-smart-http-receive/3",
                              "acceptance": json.loads(acceptance_file.read_text())})
     if args.receipt_file:
         args.receipt_file.write_text(json.dumps(receipts, indent=2) + "\n")

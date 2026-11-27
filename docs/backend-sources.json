@@ -1,8 +1,8 @@
 {
   "gitdx": {
     "repository": "https://github.com/wispsy/gitdx",
-    "commit": "8765b1fa9d3bc664fd551b15912e5455174f1983",
-    "qualification": "https://github.com/wispsy/gitdx/actions/runs/46042705164",
+    "commit": "5564067cc8becb1d5341fc56e271d7360d229e21",
+    "qualification": "https://github.com/wispsy/gitdx/actions/runs/46064002159",
     "profile": "native files-ref storage, bounded upload-pack and SHA-256-only untrusted receive with host publication guards on qualified Linux",
     "required_capabilities": [
       "objects.read",
@@ -10,8 +10,27 @@
       "refs.read",
       "refs.update"
     ],
-    "version": "0.1.0a1",
+    "version": "0.1.0a2",
     "published": {
+      "version": "0.1.0a2",
+      "commit": "5564067cc8becb1d5341fc56e271d7360d229e21",
+      "qualification": "https://github.com/wispsy/gitdx/actions/runs/46064002159",
+      "pypi": "https://pypi.org/project/gitdx/0.1.0a2/",
+      "artifacts": [
+        {
+          "filename": "gitdx-0.1.0a2-py3-none-any.whl",
+          "bytes": 155829,
+          "sha256": "09dfed779e57b2b33d435a05c216d4c4bf66c785b62aaab98991d31f893a9376"
+        },
+        {
+          "filename": "gitdx-0.1.0a2.tar.gz",
+          "bytes": 281816,
+          "sha256": "a736b4a1c8378f30e75ba2ad91589485c1e94207fb3c6ff2a2c39e425efba6ce"
+        }
+      ]
+    },
+    "source_kind": "pypi",
+    "previous_published": {
       "version": "0.1.0a1",
       "commit": "3386e6b0b0cd4c99c7ff208ba5e127b6c15ac3a8",
       "qualification": "https://github.com/wispsy/gitdx/actions/runs/45495562313",
@@ -29,8 +48,12 @@
         }
       ]
     },
-    "source_kind": "git",
-    "qualified_head": "8765b1fa9d3bc664fd551b15912e5455174f1983"
+    "previous_source": {
+      "version": "0.1.0a1",
+      "commit": "8765b1fa9d3bc664fd551b15912e5455174f1983",
+      "qualification": "https://github.com/wispsy/gitdx/actions/runs/46042705164",
+      "source_kind": "git"
+    }
   },
   "expose_api": {
     "repository": "https://github.com/wispsy/expose_api",

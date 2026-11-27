@@ -1,10 +1,11 @@
 # gittycat
 
-Initial PyPI preview: **0.1.0a1**, paired with `gitdx==0.1.0a1`.
-The current scope includes catalog storage, repository provisioning,
-authentication and the management API. Current source adds bounded read-only
-smart HTTP and SHA-256-only hosted receive on qualified Linux storage.
-Production deployment remains later work.
+Developer preview: **0.1.0a2**, paired with published `gitdx==0.1.0a2`.
+The selected scope includes catalog storage, repository provisioning,
+authentication, the management API, bounded read-only smart HTTP and
+SHA-256-only hosted receive on qualified Linux storage.
+Production qualification is unfinished. [Preview notes](docs/releases.md)
+record the supported scope and remaining gates.
 [Wispsy Releases](https://github.com/orgs/wispsy/projects/31)
 tracks publication separately from current development.
 
@@ -30,7 +31,7 @@ outbox.
 
 [Managed provisioning](docs/provisioning.md) now connects catalog permissions to
 real Gitdx bare repositories with pending/ready recovery and an immutable backend
-source.
+release.
 
 [Personal token authentication](docs/authentication.md) provides one-time secret
 delivery, expiring/revocable credentials and read/write/admin scope caps shared
@@ -42,7 +43,7 @@ through the same Expose API app. [Hosted receive](docs/receive.md) adds scoped,
 policy-checked SHA-256 pushes with quarantined intake, audit receipts and explicit
 interruption recovery. Interactive account login remains later work.
 
-Current source also provides [branch protection and ref-change policy](docs/ref-policy.md):
+This preview also provides [branch protection and ref-change policy](docs/ref-policy.md):
 versioned administrator rules, fresh token/grant checks and expected-old,
 ancestry-based decisions for managed branches and tags. These read-only decisions
 are rechecked under ref locks by the hosted receiver before publication.
