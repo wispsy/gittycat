@@ -1,17 +1,34 @@
 from dataclasses import replace
 from pathlib import Path
 import os
+import shutil
+import subprocess
 import tempfile
 import unittest
 from unittest.mock import patch
 
 from gitdx import Blob, Commit, Repository, Tree
 from gittycat import (BackendMismatch, Catalog, GitdxBackend, Principal, REQUIRED_CAPABILITIES,
-                     RepositoryInfo, RepositoryService, Slug, StorageId)
+                     ProvisioningError, RepositoryInfo, RepositoryService, Slug, StorageId)
 from test_permissions import OWNER, repository
 
 
 class BackendProfileTests(unittest.TestCase):
+    def test_reftable_storage_does_not_claim_managed_mutation_capabilities(self):
+        if shutil.which('git') is None:
+            if os.environ.get('GITTYCAT_REQUIRE_GIT')=='1':self.fail('native Git oracle is required')
+            self.skipTest('native Git oracle is unavailable')
+        environment={k:v for k,v in os.environ.items() if not k.startswith('GIT_')}
+        environment.update(GIT_CONFIG_NOSYSTEM='1',GIT_CONFIG_GLOBAL=os.devnull)
+        with tempfile.TemporaryDirectory() as temporary:
+            backend=GitdxBackend(Path(temporary)/'git')
+            for format in ('sha1','sha256'):
+                storage=StorageId.new();backend.create(storage,object_format=format)
+                path=backend.root/(storage.value+'.git')
+                subprocess.run(['git','-C',str(path),'refs','migrate','--ref-format=reftable'],
+                               capture_output=True,env=environment,check=True,timeout=30)
+                with self.assertRaises(ProvisioningError):backend.inspect(storage)
+
     def test_both_formats_execute_capabilities_without_external_processes(self):
         with tempfile.TemporaryDirectory() as temporary:
             backend = GitdxBackend(Path(temporary)/"git")

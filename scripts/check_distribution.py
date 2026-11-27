@@ -1,4 +1,4 @@
-"""Qualify selected Gittycat artifacts with the published Gitdx backend."""
+"""Qualify selected Gittycat artifacts with the explicitly pinned backend."""
 import argparse
 import hashlib
 import json
@@ -36,9 +36,11 @@ def main():
             # Resolve the artifact's declared dependency normally. This detects
             # incomplete or incompatible index metadata instead of hiding it.
             run("uv", "pip", "install", "--python", str(python), str(artifact), cwd=workspace)
-            smoke = "import gittycat, gitdx, sys; from pathlib import Path; from importlib.metadata import version; "
+            smoke = "import gittycat, gitdx, sys, json; from pathlib import Path; from importlib.metadata import version, distribution; "
             smoke += f"assert all(Path(p.__file__).resolve().is_relative_to(Path({str(environment)!r}).resolve()) for p in (gittycat,gitdx)); "
             smoke += f"assert version('gitdx') == {profile['version']!r}; "
+            if profile.get('source_kind')=='git':
+                smoke += f"assert json.loads(distribution('gitdx').read_text('direct_url.json'))['vcs_info']['commit_id'] == {profile['commit']!r}; "
             smoke += "assert gittycat.Principal().user_id is None; assert 'expose_api' not in sys.modules"
             no_git = dict(os.environ, PATH="")
             run(str(python), "-I", "-c", smoke, cwd=workspace, env=no_git)
@@ -50,7 +52,7 @@ def main():
                 "-s", str(root / "tests"), "-v", cwd=workspace)
             receipts.append({"artifact": artifact.name, "sha256": hashlib.sha256(artifact.read_bytes()).hexdigest(),
                              "backend": {"distribution": "gitdx", "version": profile["version"],
-                                         "source": profile["commit"]}, "profile": "catalog-auth-management-http/1"})
+                                         "source": profile["commit"]}, "profile": "catalog-auth-management-smart-http/2"})
     if args.receipt_file:
         args.receipt_file.write_text(json.dumps(receipts, indent=2) + "\n")
     print(json.dumps(receipts, indent=2))
