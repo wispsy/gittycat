@@ -1,7 +1,9 @@
 import importlib.util
 import json
 from pathlib import Path
+from types import SimpleNamespace
 import unittest
+from unittest.mock import patch
 
 from test_receive import descriptor_mechanism
 
@@ -13,6 +15,21 @@ def acceptance_module():
 
 
 class HostingAcceptanceTests(unittest.IsolatedAsyncioTestCase):
+    def test_index_identity_refuses_wrong_release_and_direct_sources(self):
+        module = acceptance_module()
+        profile = {'version': '0.1.0a2', 'commit': 'f'*40, 'source_kind': 'pypi'}
+        engine = SimpleNamespace(version='0.0.0', read_text=lambda name: None)
+        with (patch.object(module.metadata, 'distribution', return_value=engine),
+              patch.object(module.Path, 'read_text', return_value=json.dumps({'gitdx': profile}))):
+            with self.assertRaisesRegex(RuntimeError, 'engine version differs'):
+                module.identities()
+            engine.version = profile['version']
+            for direct in ('', 'invalid metadata', json.dumps({'url': 'https://github.com/wispsy/gitdx', 'vcs_info': {'commit_id': profile['commit']}}),
+                           json.dumps({'url': 'file:///tmp/gitdx.whl', 'archive_info': {}})):
+                engine.read_text = lambda name: direct
+                with self.assertRaisesRegex(RuntimeError, 'selected package index'):
+                    module.identities()
+
     async def test_two_user_native_workflow_restart_refusals_and_receipt(self):
         module = acceptance_module()
         with descriptor_mechanism():
@@ -23,6 +40,8 @@ class HostingAcceptanceTests(unittest.IsolatedAsyncioTestCase):
         self.assertIn('sha1-write-refusal', receipt['checks'])
         profile = json.loads((Path(__file__).resolve().parents[1]/'docs/backend-sources.json').read_text())
         self.assertEqual(receipt['packages']['gitdx']['commit'], profile['gitdx']['commit'])
+        self.assertEqual(receipt['packages']['gitdx']['source_kind'], 'pypi')
+        self.assertEqual(receipt['packages']['gitdx']['provenance'], 'published-release-manifest')
         self.assertIn('untrusted-sha1', receipt['unsupported'])
         self.assertNotIn('gtc_', json.dumps(receipt))
 

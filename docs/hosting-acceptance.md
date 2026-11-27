@@ -1,10 +1,11 @@
 # Local two-user hosting acceptance
 
-Install the selected source profile with `uv sync --locked --all-extras`.
-The immutable Gitdx commit and released Expose API source/version are recorded
-in [backend-sources.json](backend-sources.json). Package version numbers alone
-do not identify this development engine; the acceptance runner verifies its
-installed PEP 610 commit before starting. No sibling checkout is selected.
+Install the selected preview profile with `uv sync --locked --all-extras`.
+The published Gitdx 0.1.0a2 artifacts, source commit and released Expose API
+source/version are recorded in [backend-sources.json](backend-sources.json).
+The runner verifies the installed engine version and package-index provenance,
+refusing direct Git/archive installations. Its source commit is linked through
+the published release manifest. No sibling checkout is selected.
 
 On qualified Linux storage, run:
 
@@ -43,7 +44,7 @@ Linux CI runs the actual public untrusted profile; other platforms retain write
 refusal and independently qualify both read formats.
 
 Source, wheel and sdist CI retain JSON receipts for 14 days. Receipts identify
-the installed engine commit, framework source/version, Git version, selected
+the installed engine version and published source provenance, framework source/version, Git version, selected
 profile, completed checks, request/command/deadline budgets and unsupported gates.
 Installed receipts also bind the Gittycat artifact hash and run outside the
 source checkout. The installed runner executes from the qualification bundle
@@ -52,5 +53,6 @@ and imports only its selected environment's packages.
 This prototype does not qualify untrusted SHA-1, unqualified-platform writes,
 atomic files-ref visibility, global quotas or public deployment. Production
 TLS/proxy selection, complete catalog/Git backup, destructive retention and
-publication remain separately selected gates. [Hosted receive](receive.md)
+future publication remain separately selected gates. This developer preview
+leaves production qualification unfinished. [Hosted receive](receive.md)
 documents the per-ref/unknown outcome and recovery contracts.
