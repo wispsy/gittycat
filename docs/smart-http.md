@@ -18,9 +18,10 @@ git clone http://127.0.0.1:8000/git/<repository-id>.git
 Gitdx. Protocols 0, 1 and 2 support same-format SHA-1/SHA-256 clone/fetch,
 branches, peeled annotated tags and empty repositories. Responses are complete
 non-thin packs; incremental exclusion and shallow/filter/deepen requests remain
-outside the selected engine profile. Receive-pack, dumb/raw object routes and
-hosted writes are disabled. Read-serving trusted SHA-1 storage does not enable
-untrusted SHA-1 ingestion.
+outside the selected engine profile. [Receive-pack](receive.md) is separately
+restricted to authorized native SHA-256 repositories on qualified Linux storage.
+Dumb/raw object routes stay disabled. Read-serving trusted SHA-1 storage does
+not enable untrusted SHA-1 ingestion.
 
 ## Authentication and disclosure
 
@@ -54,7 +55,8 @@ are at most 1 MiB; Gitdx independently limits packets, refs, wants/haves, graph
 work, object/pack/response bytes and its cooperative 30-second deadline.
 Management JSON retains its separate `max_body_size` limit (16 KiB by default).
 Upload requests require the Git request media type and identity content encoding.
-Discovery permits exactly the requested upload-pack service parameter.
+Discovery permits exactly one selected upload-pack or receive-pack service
+parameter; write discovery requires current write access and its storage profile.
 
 Preparation runs in a worker thread. Expose API owns raw body limits, binary
 media types, asynchronous byte streaming and disconnect detection. Disconnect or

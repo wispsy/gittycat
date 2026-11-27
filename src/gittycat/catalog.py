@@ -4,6 +4,7 @@ from contextlib import contextmanager
 from dataclasses import dataclass
 from enum import StrEnum
 import os
+import json
 from pathlib import Path
 import sqlite3
 import stat
@@ -15,7 +16,7 @@ from .branch_policy import BranchPolicy, BranchRule, MAX_BRANCH_RULES, ref_patte
 
 
 APPLICATION_ID = 0x47434154
-SCHEMA_VERSION = 5
+SCHEMA_VERSION = 6
 MIGRATIONS = {
     1: (
         "CREATE TABLE owners (id TEXT PRIMARY KEY, kind TEXT NOT NULL CHECK(kind IN ('user','organization')), slug TEXT NOT NULL UNIQUE)",
@@ -35,6 +36,10 @@ MIGRATIONS = {
     5: (
         "CREATE TABLE ref_policy_versions (repository_id TEXT PRIMARY KEY REFERENCES repositories(id), version INTEGER NOT NULL CHECK(version>=0))",
         "CREATE TABLE branch_rules (repository_id TEXT NOT NULL REFERENCES repositories(id), pattern TEXT NOT NULL, allow_create INTEGER NOT NULL CHECK(allow_create IN (0,1)), allow_delete INTEGER NOT NULL CHECK(allow_delete IN (0,1)), allow_force INTEGER NOT NULL CHECK(allow_force IN (0,1)), require_review INTEGER NOT NULL CHECK(require_review IN (0,1)), minimum_permission INTEGER NOT NULL CHECK(minimum_permission IN (2,3)), PRIMARY KEY(repository_id,pattern))",
+    ),
+    6: (
+        "CREATE TABLE receive_operations (id TEXT PRIMARY KEY, repository_id TEXT NOT NULL REFERENCES repositories(id), actor_id TEXT NOT NULL REFERENCES owners(id), created_at INTEGER NOT NULL, status TEXT NOT NULL CHECK(status IN ('prepared','completed','rejected','unknown')), commands TEXT NOT NULL, result TEXT)",
+        "CREATE INDEX receive_repository ON receive_operations(repository_id,created_at,id)",
     ),
 }
 
@@ -57,6 +62,11 @@ class EventKind(StrEnum):
     CREDENTIAL_CREATED = "credential.created"
     CREDENTIAL_REVOKED = "credential.revoked"
     REF_POLICY_CHANGED = "ref-policy.changed"
+    RECEIVE_PREPARED = "receive.prepared"
+    RECEIVE_ACCEPTED = "receive.accepted"
+    RECEIVE_REJECTED = "receive.rejected"
+    RECEIVE_INTERRUPTED = "receive.interrupted"
+    RECEIVE_RECOVERED = "receive.recovered"
 
 
 @dataclass(frozen=True, slots=True)
@@ -208,6 +218,41 @@ class Catalog:
     def _user(self, user_id):
         if user_id is None or self._connection.execute("SELECT 1 FROM owners WHERE id=? AND kind='user'", (user_id,)).fetchone() is None:
             raise PermissionDenied("authenticated account required")
+
+    def _prepare_receive(self, actor, record, commands, *, now):
+        """Trusted outcome bookkeeping; Git refs remain authoritative."""
+        with self.transaction():
+            self.get_repository(actor, record.id, action=Action.WRITE)
+            operation_id = uuid.uuid4().hex
+            payload = json.dumps([[c.name.decode('ascii'), c.old.hex if c.old else None, c.new.hex if c.new else None] for c in commands])
+            if len(payload) > 512*1024: raise ValueError('receive receipt command limit exceeded')
+            self._connection.execute('INSERT INTO receive_operations VALUES(?,?,?,?,?,?,NULL)',
+                (operation_id, record.id, actor.user_id, now, 'prepared', payload))
+            self._event(EventKind.RECEIVE_PREPARED, actor.user_id, record.id, now)
+            return operation_id
+
+    def _finish_receive(self, operation_id, result, *, now):
+        with self.transaction():
+            row = self._connection.execute('SELECT * FROM receive_operations WHERE id=?', (operation_id,)).fetchone()
+            if row is None: raise CatalogConflict('receive receipt is missing')
+            encoded = json.dumps(result, sort_keys=True)
+            if len(encoded) > 512*1024: raise ValueError('receive outcome limit exceeded')
+            states = [item['state'] for item in result['outcomes']]
+            status = 'unknown' if 'unknown' in states else 'completed' if states and all(s == 'accepted' for s in states) else 'rejected'
+            self._connection.execute('UPDATE receive_operations SET status=?,result=? WHERE id=?', (status, encoded, operation_id))
+            kind = EventKind.RECEIVE_ACCEPTED if status == 'completed' else EventKind.RECEIVE_INTERRUPTED if status == 'unknown' else EventKind.RECEIVE_REJECTED
+            self._event(kind, row['actor_id'], row['repository_id'], now,
+                        job_kind='repository.index' if 'accepted' in states else 'catalog.changed')
+
+    def receive_operation(self, actor, operation_id):
+        identifier(operation_id)
+        with self._snapshot():
+            row = self._connection.execute('SELECT * FROM receive_operations WHERE id=?', (operation_id,)).fetchone()
+            if row is None: raise PermissionDenied('receive operation not found or permission denied')
+            self.get_repository(actor, row['repository_id'], action=Action.ADMIN)
+            return {'id': row['id'], 'repository_id': row['repository_id'], 'actor_id': row['actor_id'],
+                    'created_at': row['created_at'], 'status': row['status'], 'commands': json.loads(row['commands']),
+                    'result': json.loads(row['result']) if row['result'] else None}
 
     def create_account(self, account_id: str, slug: Slug, *, now: int):
         identifier(account_id)

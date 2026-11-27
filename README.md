@@ -3,7 +3,8 @@
 Initial PyPI preview: **0.1.0a1**, paired with `gitdx==0.1.0a1`.
 The current scope includes catalog storage, repository provisioning,
 authentication and the management API. Current source adds bounded read-only
-smart HTTP; hosted writes and production deployment remain later work.
+smart HTTP and SHA-256-only hosted receive on qualified Linux storage.
+Production deployment remains later work.
 [Wispsy Releases](https://github.com/orgs/wispsy/projects/31)
 tracks publication separately from current development.
 
@@ -13,7 +14,7 @@ Python 3.14+ · MIT
 
 Development starts with the [implementation plan](IMPLEMENTATION_PLAN.md) and
 [shared Project](https://github.com/orgs/wispsy/projects/30). The roadmap records
-qualification targets; hosted writes and public deployment are later milestones.
+qualification targets; public deployment remains a later milestone.
 
 Source development does not imply a published package or deployed service.
 
@@ -37,12 +38,14 @@ by discovery and repository services. Account bootstrap and token issuance use
 a trusted local catalog handle. The [optional management API](docs/management-api.md)
 adds authorized JSON routes through Expose API and explicit loopback serving.
 [Read-only smart HTTP](docs/smart-http.md) adds authorized discovery/upload-pack
-through the same Expose API app. Interactive account login remains later work.
+through the same Expose API app. [Hosted receive](docs/receive.md) adds scoped,
+policy-checked SHA-256 pushes with quarantined intake, audit receipts and explicit
+interruption recovery. Interactive account login remains later work.
 
 Current source also provides [branch protection and ref-change policy](docs/ref-policy.md):
 versioned administrator rules, fresh token/grant checks and expected-old,
 ancestry-based decisions for managed branches and tags. These read-only decisions
-are a foundation for receive-pack and do not enable hosted writes.
+are rechecked under ref locks by the hosted receiver before publication.
 
 Run `uv sync --locked` and `uv run python -m unittest discover -s tests -v`.
 The [installation profile](docs/installation.md) qualifies independently built

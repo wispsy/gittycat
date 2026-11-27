@@ -8,6 +8,7 @@ from .provisioning import GitdxBackend, HostedRepository, ProvisioningError, Rep
 from .authentication import AuthenticationError, IssuedToken, TokenAuth
 from .branch_policy import BranchPolicy, BranchRule
 from .ref_policy import RefDecision, RefPolicyResult, RefPolicyService, RefReason
+from .receive import HostedReceiveResult, ReceiveService
 
 __all__ = ["AccessGrant", "Action", "Membership", "OrganizationRole", "Owner", "OwnerKind",
            "Permission", "Principal", "RepositoryRecord", "Slug", "StorageId", "Visibility",
@@ -18,6 +19,7 @@ __all__ += ["GitdxBackend", "HostedRepository", "ProvisioningError", "Repository
 __all__ += ["AuthenticationError", "IssuedToken", "TokenAuth", "require_scope", "scope_allows"]
 __all__ += ["BackendMismatch", "REQUIRED_CAPABILITIES"]
 __all__ += ["BranchPolicy", "BranchRule", "RefDecision", "RefPolicyResult", "RefPolicyService", "RefReason"]
+__all__ += ['HostedReceiveResult', 'ReceiveService']
 __all__ += ["create_app"]
 
 

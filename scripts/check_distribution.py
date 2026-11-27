@@ -52,7 +52,7 @@ def main():
                 "-s", str(root / "tests"), "-v", cwd=workspace)
             receipts.append({"artifact": artifact.name, "sha256": hashlib.sha256(artifact.read_bytes()).hexdigest(),
                              "backend": {"distribution": "gitdx", "version": profile["version"],
-                                         "source": profile["commit"]}, "profile": "catalog-auth-management-smart-http/2"})
+                                         "source": profile["commit"]}, "profile": "catalog-auth-management-smart-http-receive/3"})
     if args.receipt_file:
         args.receipt_file.write_text(json.dumps(receipts, indent=2) + "\n")
     print(json.dumps(receipts, indent=2))

@@ -1,5 +1,17 @@
 # Gittycat implementation plan
 
+## CAT-08 hosted receive (27 November 2026)
+
+Source adds authenticated SHA-256 receive-pack through explicit untrusted Linux
+descriptor intake. Intake-overlay policy is repeated inside catalog exclusion
+and deterministic ref locks, with expected-old CAS and truthful per-ref reports.
+Schema 6 retains prepared/outcome receipts with audit/outbox; interrupted Git
+publication has explicit administrator recovery and unknown requests remain
+unknown. SHA-1/unqualified platform refusal precedes body reads. Source tests
+cover native pushes, races, bounds and recovery; installed qualification selects
+the immutable engine guard/codec revision in backend-sources.json. See
+[hosted receive](docs/receive.md). Publication/deployment remain separate.
+
 ## CAT-07 read-serving batch (26 November 2026)
 
 Add smart-HTTP discovery/upload-pack routes to the existing Expose API app.

@@ -1,7 +1,7 @@
 # Qualified installation profile
 
 The published preview pairs with `gitdx==0.1.0a1`. Current source needs the newer
-upload-pack API and selects an immutable Gitdx Git revision in `pyproject.toml`
+upload-pack/guarded-receive APIs and selects an immutable Gitdx Git revision in `pyproject.toml`
 and `uv.lock`. [backend-sources.json](backend-sources.json) records this selection
 and retains the published version, source, release evidence and artifact hashes
 under `published`. The package version alone does not identify the development
@@ -14,7 +14,7 @@ Managed bare storage requires native SHA-1/SHA-256 init/open and the capabilitie
 checks format, bare status and all required capabilities after creation and on
 every open. Mismatches raise `BackendMismatch`; a failed create stays pending
 and hidden for authorized recovery, rather than advertising an unusable backend.
-Managed mutation capabilities require files refs; externally migrated read-only
+Managed mutation capabilities require files refs; externally migrated
 reftable storage is refused instead of advertising a qualified writer.
 This profile does not imply transport, reftable, hosting hardening or newer
 engine features beyond the selected revision's independent evidence.
@@ -50,3 +50,11 @@ remain in `uv.lock`. See [management API](management-api.md) and
 qualified engine version, switch back to its package-index requirement and
 repeat installed qualification. `check_release.py` deliberately refuses direct
 source dependencies; this development selection does not authorize publication.
+
+Hosted writes select `IngestionProfile.UNTRUSTED` for every request and require
+native SHA-256 plus the engine's qualified Linux descriptor/allocation profile.
+Linux suites run the actual public profile. Other POSIX fixtures explicitly
+exercise descriptor mechanisms without enabling that public platform profile;
+Windows qualifies early refusal. Both hashes retain trusted-local provisioning
+and read serving. The receive suite checks real stock-Git initial/subsequent
+pushes, policy/credential races, unknown outcomes and prepared/committed recovery.
