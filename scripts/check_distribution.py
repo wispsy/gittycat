@@ -50,9 +50,14 @@ def main():
             run("uv", "pip", "check", "--python", str(python), cwd=workspace)
             run(str(python), "-I", "-W", "error::ResourceWarning", "-m", "unittest", "discover",
                 "-s", str(root / "tests"), "-v", cwd=workspace)
+            acceptance_file = workspace / f"acceptance-{index}.json"
+            selection = [] if sys.platform == 'linux' else ['--read-only']
+            run(str(python), '-I', str(root/'scripts/accept_hosting.py'), *selection,
+                '--output', str(acceptance_file), cwd=workspace)
             receipts.append({"artifact": artifact.name, "sha256": hashlib.sha256(artifact.read_bytes()).hexdigest(),
                              "backend": {"distribution": "gitdx", "version": profile["version"],
-                                         "source": profile["commit"]}, "profile": "catalog-auth-management-smart-http-receive/3"})
+                                         "source": profile["commit"]}, "profile": "catalog-auth-management-smart-http-receive/3",
+                             "acceptance": json.loads(acceptance_file.read_text())})
     if args.receipt_file:
         args.receipt_file.write_text(json.dumps(receipts, indent=2) + "\n")
     print(json.dumps(receipts, indent=2))

@@ -1,5 +1,14 @@
 # Gittycat implementation plan
 
+## CAT-09 local acceptance (27 November 2026)
+
+The repeatable [two-user runner](docs/hosting-acceptance.md) uses temporary state
+and real stock Git against loopback HTTP. It qualifies native SHA-256 clone,
+commit, main/feature pushes, second-user fetch, protected/outsider refusal and
+restart; SHA-1 stays trusted-local/read-only with early hosted-write refusal.
+Source/wheel/sdist receipts retain the exact engine/framework selection and
+unsupported limits. Unqualified platforms explicitly select read-only acceptance.
+
 ## CAT-08 hosted receive (27 November 2026)
 
 Source adds authenticated SHA-256 receive-pack through explicit untrusted Linux

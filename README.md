@@ -48,6 +48,8 @@ ancestry-based decisions for managed branches and tags. These read-only decision
 are rechecked under ref locks by the hosted receiver before publication.
 
 Run `uv sync --locked` and `uv run python -m unittest discover -s tests -v`.
+The [two-user hosting acceptance](docs/hosting-acceptance.md) runner checks real
+stock-Git workflows, access refusal and restart, retaining a secret-free receipt.
 The [installation profile](docs/installation.md) qualifies independently built
 Gitdx/Gittycat artifacts and rejects backend capability mismatches.
 `uv run python scripts/check_distribution.py` checks wheel/sdist installations
