@@ -13,8 +13,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
-      GITTYCAT_REQUIRE_GIT: "1"
-      GITTYCAT_REQUIRE_HTTP: "1"
+      GITCX_REQUIRE_GIT: "1"
+      GITCX_REQUIRE_HTTP: "1"
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
@@ -49,7 +49,7 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: pypi
-      url: https://pypi.org/p/gittycat
+      url: https://pypi.org/p/gitcx
     permissions:
       id-token: write
     steps:

@@ -7,9 +7,9 @@ provided. Existing account/organization IDs, memberships and grants remain the
 authority for repository access.
 
 ```python
-from gittycat import Action, Catalog, Principal, Slug, TokenAuth
+from gitcx import Action, Catalog, Principal, Slug, TokenAuth
 
-with Catalog("data/gittycat.sqlite3") as catalog:
+with Catalog("data/gitcx.sqlite3") as catalog:
     account_id = "1" * 32
     catalog.create_account(account_id, Slug("example-user"), now=1700000000)
     auth = TokenAuth(catalog)

@@ -1,7 +1,7 @@
 from dataclasses import FrozenInstanceError, replace
 import unittest
 
-from gittycat import AccessGrant, Action, Membership, OrganizationRole, Owner, OwnerKind, Permission, PermissionDenied, Principal, RepositoryRecord, Slug, StorageId, Visibility, allowed, require_permission, visible_repositories
+from gitcx import AccessGrant, Action, Membership, OrganizationRole, Owner, OwnerKind, Permission, PermissionDenied, Principal, RepositoryRecord, Slug, StorageId, Visibility, allowed, require_permission, visible_repositories
 
 
 OWNER = "1" * 32

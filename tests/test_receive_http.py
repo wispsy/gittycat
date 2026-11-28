@@ -7,7 +7,7 @@ import subprocess
 from unittest.mock import patch
 
 from gitdx import ReceiveLimits, Repository, TransferLimits
-from gittycat import Action, BranchRule, Catalog, GitdxBackend, Principal, ReceiveService, TokenAuth, create_app
+from gitcx import Action, BranchRule, Catalog, GitdxBackend, Principal, ReceiveService, TokenAuth, create_app
 import test_git_http as http_tests
 from test_git_http import OWNER, OUTSIDER, commit, native, serve
 from test_receive import descriptor_mechanism
@@ -32,7 +32,7 @@ class ReceiveHTTPTests(unittest.IsolatedAsyncioTestCase):
                     status, _, body = await self.request(server, 'POST', '/git/'+record_id+'.git/git-receive-pack',
                         authorization=authorization, body=b'invalid', headers=media)
                     self.assertEqual(status, expected);self.assertNotIn(self.tokens[OWNER].encode(), body)
-                with patch('gittycat.receive.supported', return_value=False):
+                with patch('gitcx.receive.supported', return_value=False):
                     for path, method in (('/git/'+record.id+'.git/git-receive-pack', 'POST'),
                                          ('/git/'+record.id+'.git/info/refs?service=git-receive-pack', 'GET')):
                         self.assertEqual((await self.request(server, method, path, authorization=auth, headers=media))[0], 503)

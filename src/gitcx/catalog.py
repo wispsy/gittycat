@@ -194,7 +194,7 @@ class Catalog:
             version = self._connection.execute("PRAGMA user_version").fetchone()[0]
             tables = self._connection.execute("SELECT 1 FROM sqlite_master WHERE name NOT LIKE 'sqlite_%' LIMIT 1").fetchone()
             if app not in (0, APPLICATION_ID) or (app == 0 and (version or tables)):
-                raise CatalogError("database is not an initialized Gittycat catalog")
+                raise CatalogError("database is not an initialized Gitcx catalog")
             if not 0 <= version <= SCHEMA_VERSION:
                 raise CatalogError("catalog schema version is newer than this application")
             if version == 0 and tables:

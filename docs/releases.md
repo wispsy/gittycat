@@ -1,6 +1,22 @@
 # Developer previews
 
+## 0.1.0a3
+
+Early migration preview under the new **Gitcx** name. Repository, distribution,
+Python namespace and CLI are now `wispsy/gitcx`, `gitcx`, `gitcx` and `gitcx`.
+The former name conflicted with an existing npm/npx command. Existing catalogs,
+repository ownership receipts and credentials keep their durable formats.
+See [migration instructions](migration.md).
+
+Dependencies remain published Gitdx 0.1.0a2 and optional Expose API 0.2.0.
+Hosted writes remain SHA-256-only on qualified Linux storage; production
+qualification is unfinished. Repository browsing, reviews and durable jobs can
+follow this developer preview. Publication uses the renamed repository's
+`release.yaml` workflow and `pypi` Trusted Publisher environment.
+
 ## 0.1.0a2
+
+Published under the former `gittycat` distribution and Python namespace.
 
 This developer preview selects published `gitdx==0.1.0a2` and Expose API 0.2.0
 for the optional HTTP extra. Production qualification is unfinished. Hosted
@@ -35,6 +51,8 @@ further qualification.
 
 ## 0.1.0a1
 
+Published under the former `gittycat` distribution and Python namespace.
+
 Initial catalog/authentication/management preview paired with Gitdx 0.1.0a1.
-The immutable [release](https://github.com/wispsy/gittycat/releases/tag/v0.1.0a1)
+The immutable [release](https://github.com/wispsy/gitcx/releases/tag/v0.1.0a1)
 retains its original artifact history.

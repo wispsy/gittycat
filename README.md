@@ -1,11 +1,14 @@
-# gittycat
+# gitcx
 
-Developer preview: **0.1.0a2**, paired with published `gitdx==0.1.0a2`.
+Developer preview: **0.1.0a3**, paired with published `gitdx==0.1.0a2`.
 The selected scope includes catalog storage, repository provisioning,
 authentication, the management API, bounded read-only smart HTTP and
 SHA-256-only hosted receive on qualified Linux storage.
 Production qualification is unfinished. [Preview notes](docs/releases.md)
 record the supported scope and remaining gates.
+The project was renamed from Gittycat to avoid the existing npm command name.
+Use `pip install "gitcx[http]==0.1.0a3"`, `import gitcx` and the `gitcx` command.
+See [migration instructions](docs/migration.md) for existing installations.
 [Wispsy Releases](https://github.com/orgs/wispsy/projects/31)
 tracks publication separately from current development.
 
@@ -52,6 +55,6 @@ Run `uv sync --locked` and `uv run python -m unittest discover -s tests -v`.
 The [two-user hosting acceptance](docs/hosting-acceptance.md) runner checks real
 stock-Git workflows, access refusal and restart, retaining a secret-free receipt.
 The [installation profile](docs/installation.md) qualifies independently built
-Gitdx/Gittycat artifacts and rejects backend capability mismatches.
+Gitdx/Gitcx artifacts and rejects backend capability mismatches.
 `uv run python scripts/check_distribution.py` checks wheel/sdist installations
 outside the checkout and startup with Git absent from PATH.

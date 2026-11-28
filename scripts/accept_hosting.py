@@ -13,7 +13,7 @@ import uuid
 from expose_api import serve
 from gitdx import Blob, Commit, Repository, Tree, TreeEntry
 import gitdx.confined_fs as storage_profile
-from gittycat import (AccessGrant, Action, BranchRule, Catalog, GitdxBackend, Owner, Permission,
+from gitcx import (AccessGrant, Action, BranchRule, Catalog, GitdxBackend, Owner, Permission,
                      Principal, RepositoryRecord, RepositoryService, Slug, StorageId, TokenAuth,
                      Visibility, create_app)
 
@@ -73,14 +73,14 @@ def identities():
     return {'gitdx': {'version': engine.version, 'commit': actual,
                       'source_kind': backend['source_kind'], 'provenance': provenance},
             'expose_api': {'version': metadata.version('expose-api'), 'source': profile['expose_api']['commit']},
-            'gittycat': {'version': metadata.version('gittycat')}}
+            'gitcx': {'version': metadata.version('gitcx')}}
 
 
 async def run_acceptance(*, read_only=False):
     if not read_only and not storage_profile.supported():
         raise RuntimeError('full hosted acceptance requires the qualified Linux profile; select read_only explicitly elsewhere')
     selected = identities();checks = []
-    with tempfile.TemporaryDirectory(prefix='gittycat-acceptance-') as tmp:
+    with tempfile.TemporaryDirectory(prefix='gitcx-acceptance-') as tmp:
         root = Path(tmp);data = root/'data';database = data/'catalog.sqlite3';backend = GitdxBackend(data/'git')
         alice, bob, outsider = (uuid.uuid4().hex for _ in range(3));tokens = {}
         with Catalog(database) as catalog:
