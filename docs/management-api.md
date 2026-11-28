@@ -1,17 +1,17 @@
 # Local management API
 
 Install the explicit HTTP extra with `uv sync --locked --extra http` or install
-`gittycat[http]`. It selects published `expose-api==0.2.0`; wheel hashes are locked.
+`gitcx[http]`. It selects published `expose-api==0.2.0`; wheel hashes are locked.
 Core imports and backend operations do not import or require Expose API.
 
-`gittycat.create_app(data_root)` returns an Expose API ASGI application. Its
+`gitcx.create_app(data_root)` returns an Expose API ASGI application. Its
 lifespan migrates the catalog, opens the managed storage root and marks readiness;
 shutdown clears readiness. It never creates accounts, tokens or a listening
 socket implicitly. Use a trusted local `Catalog(data_root / 'catalog.sqlite3')`
 and `TokenAuth` to bootstrap accounts and issue tokens as described in
 [authentication](authentication.md). Existing repositories use `data_root/git`.
 
-`gittycat serve --data-root ./data --port 8000` explicitly starts the framework's
+`gitcx serve --data-root ./data --port 8000` explicitly starts the framework's
 loopback-only demo server. It is for local acceptance, with the framework's
 10-second request timeout and 100-connection defaults. Production server/proxy,
 TLS, deployment and public-hosting hardening remain separate choices. An ASGI

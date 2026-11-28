@@ -8,8 +8,8 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-from gittycat import AccessGrant, Action, Catalog, CatalogConflict, CatalogError, CredentialMetadata, Membership, OrganizationRole, Owner, OwnerKind, Permission, PermissionDenied, Principal, Slug, StorageId, Visibility
-from gittycat.catalog import APPLICATION_ID, MIGRATIONS
+from gitcx import AccessGrant, Action, Catalog, CatalogConflict, CatalogError, CredentialMetadata, Membership, OrganizationRole, Owner, OwnerKind, Permission, PermissionDenied, Principal, Slug, StorageId, Visibility
+from gitcx.catalog import APPLICATION_ID, MIGRATIONS
 from test_permissions import OWNER, READER, WRITER, OUTSIDER, ORG, REPO, repository
 
 
@@ -140,7 +140,7 @@ class CatalogTests(unittest.TestCase):
             connection.execute(f"PRAGMA application_id={APPLICATION_ID}")
             connection.execute("PRAGMA user_version=1");connection.execute("COMMIT")
         broken = {**MIGRATIONS, 2: (*MIGRATIONS[2], "INVALID SQL")}
-        with patch("gittycat.catalog.MIGRATIONS", broken):
+        with patch("gitcx.catalog.MIGRATIONS", broken):
             with self.assertRaises(sqlite3.OperationalError):Catalog(path)
         with closing(sqlite3.connect(path)) as connection:
             self.assertEqual(connection.execute("PRAGMA user_version").fetchone()[0], 1)

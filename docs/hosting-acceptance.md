@@ -46,7 +46,7 @@ refusal and independently qualify both read formats.
 Source, wheel and sdist CI retain JSON receipts for 14 days. Receipts identify
 the installed engine version and published source provenance, framework source/version, Git version, selected
 profile, completed checks, request/command/deadline budgets and unsupported gates.
-Installed receipts also bind the Gittycat artifact hash and run outside the
+Installed receipts also bind the Gitcx artifact hash and run outside the
 source checkout. The installed runner executes from the qualification bundle
 and imports only its selected environment's packages.
 

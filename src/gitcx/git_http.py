@@ -126,7 +126,7 @@ def install_git_routes(app,database,*,clock,limits=None,receive_limits=None,max_
     @app.exception_handler(GitAuthenticationRequired)
     def credentials(request,exception):
         return Response(b'authentication required\n',status=401,media_type='text/plain',headers={
-            'WWW-Authenticate':'Basic realm="Gittycat", charset="UTF-8"','Cache-Control':'no-store'})
+            'WWW-Authenticate':'Basic realm="Gitcx", charset="UTF-8"','Cache-Control':'no-store'})
 
     def response(request,body,version,discovery):
         if not slots.acquire(blocking=False):raise HTTPException(503,'Git transfer capacity reached')

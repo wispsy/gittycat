@@ -10,9 +10,9 @@ from unittest.mock import patch
 from gitdx import (ObjectQuarantine, PushCommand, RefLocked, Repository, TransferCancelled,
                    encode_push_request, negotiate_push)
 from gitdx.confined_fs import supported
-from gittycat import (Action, BranchRule, Catalog, EventKind, GitdxBackend, PermissionDenied, Principal,
+from gitcx import (Action, BranchRule, Catalog, EventKind, GitdxBackend, PermissionDenied, Principal,
                      ReceiveService, RepositoryService, Slug, TokenAuth)
-from gittycat.receive import default_receive_limits
+from gitcx.receive import default_receive_limits
 from test_git_http import commit
 from test_permissions import OWNER, OUTSIDER, repository
 
@@ -23,7 +23,7 @@ def descriptor_mechanism():
     if supported():
         yield
     elif os.name == 'posix':
-        with patch('gitdx.confined_fs.supported', return_value=True), patch('gittycat.receive.supported', return_value=True):
+        with patch('gitdx.confined_fs.supported', return_value=True), patch('gitcx.receive.supported', return_value=True):
             yield
     else:
         raise unittest.SkipTest('descriptor mechanisms require POSIX; public refusal is qualified separately')
@@ -107,7 +107,7 @@ class ReceiveTests(unittest.TestCase):
                 self.assertIsNone(self.repo.refs.read(command.name.decode()))
 
     def test_under_ref_lock_policy_checks_retain_catalog_exclusion(self):
-        from gittycat.ref_policy import RefPolicyService
+        from gitcx.ref_policy import RefPolicyService
         with descriptor_mechanism():
             tip = commit(self.source, b'data');command = PushCommand(b'refs/heads/main', None, tip)
             original = RefPolicyService._decide;observed = []

@@ -3,7 +3,7 @@ import subprocess
 import sys
 import unittest
 
-from gittycat import AccessGrant, Owner, Permission, Principal, RepositoryInfo, RepositoryRecord, Slug, StorageId
+from gitcx import AccessGrant, Owner, Permission, Principal, RepositoryInfo, RepositoryRecord, Slug, StorageId
 from test_permissions import OWNER, REPO, repository
 
 
@@ -46,7 +46,7 @@ class DomainTests(unittest.TestCase):
         self.assertEqual(info.capabilities, frozenset({"loose-objects.read"}))
 
     def test_package_cli_without_git_runtime(self):
-        result = subprocess.run([sys.executable, "-I", "-m", "gittycat", "--help"],
+        result = subprocess.run([sys.executable, "-I", "-m", "gitcx", "--help"],
                                 capture_output=True, env=dict(os.environ, PATH=""))
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertIn(b"Git-compatible", result.stdout)

@@ -8,7 +8,7 @@ import unittest
 from unittest.mock import patch
 
 from gitdx import Repository
-from gittycat import Catalog,GitdxBackend,PermissionDenied,Principal,ProvisioningError,RepositoryService,Slug,StorageId,Visibility
+from gitcx import Catalog,GitdxBackend,PermissionDenied,Principal,ProvisioningError,RepositoryService,Slug,StorageId,Visibility
 from test_permissions import OWNER,OUTSIDER,repository
 
 
@@ -56,7 +56,7 @@ class ProvisioningTests(unittest.TestCase):
 
     def test_interrupted_staging_recovery_and_unknown_orphans_preserved(self):
         record=repository()
-        with patch("gittycat.provisioning.os.rename",side_effect=OSError("injected publish failure")):
+        with patch("gitcx.provisioning.os.rename",side_effect=OSError("injected publish failure")):
             with self.assertRaises(OSError):self.service.create(self.owner,record,now=2)
         self.assertEqual(self.service.recover(self.owner,record.id,now=3).record,record)
         other=replace(record,id="9"*32,slug=Slug("orphan"),storage_id=StorageId.new())
@@ -80,7 +80,7 @@ class ProvisioningGitTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         if not shutil.which("git"):
-            if os.environ.get("GITTYCAT_REQUIRE_GIT")=="1":raise RuntimeError("native Git oracle is required")
+            if os.environ.get("GITCX_REQUIRE_GIT")=="1":raise RuntimeError("native Git oracle is required")
             raise unittest.SkipTest("native Git is unavailable")
 
     def test_native_git_opens_provisioned_repositories(self):

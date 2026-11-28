@@ -1,4 +1,4 @@
-# Gittycat implementation plan
+# Gitcx implementation plan
 
 ## CAT-09 local acceptance (27 November 2026)
 
@@ -35,14 +35,14 @@ by immutable source revision until a separate package release is authorized;
 record published-versus-main status and qualify both installed artifacts.
 
 Baseline: 22 November 2026. Python 3.14+, MIT, public source.
-The [shared Gitdx → Gittycat plan](https://github.com/wispsy/gitdx/blob/main/IMPLEMENTATION_PLAN.md)
+The [shared Gitdx → Gitcx plan](https://github.com/wispsy/gitdx/blob/main/IMPLEMENTATION_PLAN.md)
 owns the complete engine/hosting roadmap and task register. This document owns
 the hosting boundary. The [shared Project](https://github.com/orgs/wispsy/projects/30)
 and linked issues are the execution queue.
 
 ## Goal and first milestone
 
-Gittycat will be a self-hosted single-node Git forge powered by Gitdx. Stock Git
+Gitcx will be a self-hosted single-node Git forge powered by Gitdx. Stock Git
 clients must clone, push and fetch without installing either Python package on
 the client. The 0.8 alpha adds identities, organizations, repository roles,
 branch protection, a repository browser, pull requests, comments/reviews, audit
@@ -101,7 +101,7 @@ bounded queries; define migration backup/rollback and process restart behavior.
 ```text
 data/
   git/<opaque-storage-id>.git/
-  db/gittycat.sqlite3
+  db/gitcx.sqlite3
   jobs/
   backups/
 ```
@@ -203,23 +203,23 @@ sequence and milestone gates, use the shared plan.
 
 | Task | Scope | Prerequisites |
 | --- | --- | --- |
-| [CAT-01](https://github.com/wispsy/gittycat/issues/1) | Hosting domain and explicit repository permissions | None |
-| [CAT-02](https://github.com/wispsy/gittycat/issues/2) | SQLite catalog, migrations and audit outbox | CAT-01 |
-| [CAT-03](https://github.com/wispsy/gittycat/issues/3) | Bare repository provisioning through gitdx | CAT-02, DX-04 |
-| [CAT-04](https://github.com/wispsy/gittycat/issues/4) | Accounts, organizations and token authentication | CAT-02 |
-| [CAT-05](https://github.com/wispsy/gittycat/issues/5) | Branch protection and ref-change policy | CAT-04, DX-15 |
-| [CAT-06](https://github.com/wispsy/gittycat/issues/6) | Management API with Expose API integration | CAT-03, CAT-04 |
-| [CAT-07](https://github.com/wispsy/gittycat/issues/7) | Smart-HTTP advertisement and upload-pack | CAT-06, DX-22 |
-| [CAT-08](https://github.com/wispsy/gittycat/issues/8) | Receive-pack with quarantine and policy enforcement | CAT-07, CAT-05, DX-26, DX-24 |
-| [CAT-09](https://github.com/wispsy/gittycat/issues/9) | Local two-user stock-Git hosting acceptance | CAT-08 |
-| [CAT-10](https://github.com/wispsy/gittycat/issues/10) | Repository browser and safe commit/diff views | CAT-09, DX-14 |
-| [CAT-11](https://github.com/wispsy/gittycat/issues/11) | Pull requests, comments, reviews and checked merge | CAT-10, CAT-05, DX-16 |
-| [CAT-12](https://github.com/wispsy/gittycat/issues/12) | Durable jobs, audit queries and optional webhooks | CAT-08, CAT-02 |
-| [CAT-13](https://github.com/wispsy/gittycat/issues/13) | Backup, restore, quotas and single-node operations | CAT-11, CAT-12, DX-27 / policy gate |
-| [CAT-14](https://github.com/wispsy/gittycat/issues/14) | Selected typed operations and terminal/workflow adapters | CAT-11, DX-33 / policy gate |
-| [CAT-15](https://github.com/wispsy/gittycat/issues/15) | Installed forge alpha and security qualification | CAT-13, DX-33 |
-| [CAT-16](https://github.com/wispsy/gittycat/issues/16) | Owner-selected publication and deployment | CAT-15 / policy gate |
-| [CAT-17](https://github.com/wispsy/gittycat/issues/17) | Immutable cross-repository installation profile | CAT-03, DX-04 |
+| [CAT-01](https://github.com/wispsy/gitcx/issues/1) | Hosting domain and explicit repository permissions | None |
+| [CAT-02](https://github.com/wispsy/gitcx/issues/2) | SQLite catalog, migrations and audit outbox | CAT-01 |
+| [CAT-03](https://github.com/wispsy/gitcx/issues/3) | Bare repository provisioning through gitdx | CAT-02, DX-04 |
+| [CAT-04](https://github.com/wispsy/gitcx/issues/4) | Accounts, organizations and token authentication | CAT-02 |
+| [CAT-05](https://github.com/wispsy/gitcx/issues/5) | Branch protection and ref-change policy | CAT-04, DX-15 |
+| [CAT-06](https://github.com/wispsy/gitcx/issues/6) | Management API with Expose API integration | CAT-03, CAT-04 |
+| [CAT-07](https://github.com/wispsy/gitcx/issues/7) | Smart-HTTP advertisement and upload-pack | CAT-06, DX-22 |
+| [CAT-08](https://github.com/wispsy/gitcx/issues/8) | Receive-pack with quarantine and policy enforcement | CAT-07, CAT-05, DX-26, DX-24 |
+| [CAT-09](https://github.com/wispsy/gitcx/issues/9) | Local two-user stock-Git hosting acceptance | CAT-08 |
+| [CAT-10](https://github.com/wispsy/gitcx/issues/10) | Repository browser and safe commit/diff views | CAT-09, DX-14 |
+| [CAT-11](https://github.com/wispsy/gitcx/issues/11) | Pull requests, comments, reviews and checked merge | CAT-10, CAT-05, DX-16 |
+| [CAT-12](https://github.com/wispsy/gitcx/issues/12) | Durable jobs, audit queries and optional webhooks | CAT-08, CAT-02 |
+| [CAT-13](https://github.com/wispsy/gitcx/issues/13) | Backup, restore, quotas and single-node operations | CAT-11, CAT-12, DX-27 / policy gate |
+| [CAT-14](https://github.com/wispsy/gitcx/issues/14) | Selected typed operations and terminal/workflow adapters | CAT-11, DX-33 / policy gate |
+| [CAT-15](https://github.com/wispsy/gitcx/issues/15) | Installed forge alpha and security qualification | CAT-13, DX-33 |
+| [CAT-16](https://github.com/wispsy/gitcx/issues/16) | Owner-selected publication and deployment | CAT-15 / policy gate |
+| [CAT-17](https://github.com/wispsy/gitcx/issues/17) | Immutable cross-repository installation profile | CAT-03, DX-04 |
 
 ## CAT-05 implementation contract (2026-11-26)
 

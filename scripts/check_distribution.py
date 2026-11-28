@@ -1,4 +1,4 @@
-"""Qualify selected Gittycat artifacts with the explicitly pinned backend."""
+"""Qualify selected Gitcx artifacts with the explicitly pinned backend."""
 import argparse
 import hashlib
 import json
@@ -36,18 +36,18 @@ def main():
             # Resolve the artifact's declared dependency normally. This detects
             # incomplete or incompatible index metadata instead of hiding it.
             run("uv", "pip", "install", "--refresh-package", "gitdx", "--python", str(python), str(artifact), cwd=workspace)
-            smoke = "import gittycat, gitdx, sys, json; from pathlib import Path; from importlib.metadata import version, distribution; "
-            smoke += f"assert all(Path(p.__file__).resolve().is_relative_to(Path({str(environment)!r}).resolve()) for p in (gittycat,gitdx)); "
+            smoke = "import gitcx, gitdx, sys, json; from pathlib import Path; from importlib.metadata import version, distribution; "
+            smoke += f"assert all(Path(p.__file__).resolve().is_relative_to(Path({str(environment)!r}).resolve()) for p in (gitcx,gitdx)); "
             smoke += f"assert version('gitdx') == {profile['version']!r}; "
             if profile.get('source_kind')=='git':
                 smoke += f"assert json.loads(distribution('gitdx').read_text('direct_url.json'))['vcs_info']['commit_id'] == {profile['commit']!r}; "
             else:
                 smoke += "assert distribution('gitdx').read_text('direct_url.json') is None; "
-            smoke += "assert gittycat.Principal().user_id is None; assert 'expose_api' not in sys.modules"
+            smoke += "assert gitcx.Principal().user_id is None; assert 'expose_api' not in sys.modules"
             no_git = dict(os.environ, PATH="")
             run(str(python), "-I", "-c", smoke, cwd=workspace, env=no_git)
-            run(str(python), "-I", "-m", "gittycat", "--help", cwd=workspace, env=no_git)
-            run(str(python), "-I", "-m", "gittycat", "--version", cwd=workspace, env=no_git)
+            run(str(python), "-I", "-m", "gitcx", "--help", cwd=workspace, env=no_git)
+            run(str(python), "-I", "-m", "gitcx", "--version", cwd=workspace, env=no_git)
             run("uv", "pip", "install", "--refresh-package", "gitdx", "--python", str(python), str(artifact) + "[http]", cwd=workspace)
             run("uv", "pip", "check", "--python", str(python), cwd=workspace)
             run(str(python), "-I", "-W", "error::ResourceWarning", "-m", "unittest", "discover",

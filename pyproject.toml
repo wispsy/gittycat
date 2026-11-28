@@ -1,6 +1,6 @@
 [project]
-name = "gittycat"
-version = "0.1.0a2"
+name = "gitcx"
+version = "0.1.0a3"
 description = "A Git-compatible hosting platform powered by gitdx"
 license = "MIT"
 license-files = ["LICENSE"]
@@ -12,11 +12,11 @@ requires-python = ">=3.14"
 dependencies = ["gitdx==0.1.0a2"]
 
 [project.scripts]
-gittycat = "gittycat:main"
+gitcx = "gitcx:main"
 
 [project.urls]
-Repository = "https://github.com/wispsy/gittycat"
-Issues = "https://github.com/wispsy/gittycat/issues"
+Repository = "https://github.com/wispsy/gitcx"
+Issues = "https://github.com/wispsy/gitcx/issues"
 
 [project.optional-dependencies]
 http = [

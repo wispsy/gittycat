@@ -8,7 +8,7 @@ import unittest
 from unittest.mock import patch
 
 from gitdx import Blob, Commit, Repository, Tree
-from gittycat import (BackendMismatch, Catalog, GitdxBackend, Principal, REQUIRED_CAPABILITIES,
+from gitcx import (BackendMismatch, Catalog, GitdxBackend, Principal, REQUIRED_CAPABILITIES,
                      ProvisioningError, RepositoryInfo, RepositoryService, Slug, StorageId)
 from test_permissions import OWNER, repository
 
@@ -16,7 +16,7 @@ from test_permissions import OWNER, repository
 class BackendProfileTests(unittest.TestCase):
     def test_reftable_storage_does_not_claim_managed_mutation_capabilities(self):
         if shutil.which('git') is None:
-            if os.environ.get('GITTYCAT_REQUIRE_GIT')=='1':self.fail('native Git oracle is required')
+            if os.environ.get('GITCX_REQUIRE_GIT')=='1':self.fail('native Git oracle is required')
             self.skipTest('native Git oracle is unavailable')
         environment={k:v for k,v in os.environ.items() if not k.startswith('GIT_')}
         environment.update(GIT_CONFIG_NOSYSTEM='1',GIT_CONFIG_GLOBAL=os.devnull)

@@ -13,15 +13,15 @@ import uuid
 from unittest.mock import patch
 
 from gitdx import Blob, Commit, ProtocolLimits, Tag, Tree, TreeEntry, UploadPack, UploadPackLimits
-from gittycat import (AccessGrant, Action, Catalog, GitdxBackend, Owner, Permission, Principal,
+from gitcx import (AccessGrant, Action, Catalog, GitdxBackend, Owner, Permission, Principal,
                      RepositoryRecord, RepositoryService, Slug, StorageId, TokenAuth, Visibility)
 from test_permissions import OWNER, OUTSIDER
 
 try:
     from expose_api import HTTPRequest, serve
-    from gittycat import create_app
+    from gitcx import create_app
 except ImportError:
-    if os.environ.get('GITTYCAT_REQUIRE_HTTP')=='1':raise
+    if os.environ.get('GITCX_REQUIRE_HTTP')=='1':raise
     serve=None
 
 IDENTITY=b'Fixture <fixture@example.invalid> 1700000000 +0000'
@@ -87,7 +87,7 @@ class GitHTTPTests(unittest.IsolatedAsyncioTestCase):
             with patch.object(GitdxBackend,'open_repository',side_effect=AssertionError('storage read before authorization')):
                 denied=await self.request(server,'GET',path(private.id));missing=await self.request(server,'GET',path(uuid.uuid4().hex))
                 self.assertEqual(denied,missing);self.assertEqual(denied[0],401)
-                self.assertTrue(denied[1]['www-authenticate'].startswith('Basic realm="Gittycat"'))
+                self.assertTrue(denied[1]['www-authenticate'].startswith('Basic realm="Gitcx"'))
                 unauthorized=await self.request(server,'GET',path(private.id),authorization='Bearer '+self.tokens[OUTSIDER])
                 absent=await self.request(server,'GET',path(uuid.uuid4().hex),authorization='Bearer '+self.tokens[OUTSIDER])
                 self.assertEqual(unauthorized,absent);self.assertEqual(absent[0],404)
@@ -170,7 +170,7 @@ class GitHTTPTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_native_clone_fetch_both_formats_all_versions_tags_and_empty(self):
         if shutil.which('git') is None:
-            if os.environ.get('GITTYCAT_REQUIRE_GIT')=='1':self.fail('native Git oracle is required')
+            if os.environ.get('GITCX_REQUIRE_GIT')=='1':self.fail('native Git oracle is required')
             self.skipTest('native Git oracle is unavailable')
         # Use normal budgets for real negotiation rather than the tiny negative
         # fixture profile selected in setUp.

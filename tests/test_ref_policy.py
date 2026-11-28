@@ -9,12 +9,12 @@ import unittest
 from unittest.mock import patch
 
 from gitdx import Blob, Commit, ObjectId, PushCommand, RevisionLimits, Tree
-from gittycat import (AccessGrant, Action, AuthenticationError, BranchRule, Catalog,
+from gitcx import (AccessGrant, Action, AuthenticationError, BranchRule, Catalog,
                      CatalogConflict, GitdxBackend, Membership, OrganizationRole,
                      Owner, OwnerKind, Permission, PermissionDenied, Principal,
                      RefPolicyService, RefReason, RepositoryService, Slug, StorageId,
                      TokenAuth, Visibility)
-from gittycat.catalog import APPLICATION_ID, MIGRATIONS, SCHEMA_VERSION
+from gitcx.catalog import APPLICATION_ID, MIGRATIONS, SCHEMA_VERSION
 from test_permissions import OWNER, READER, WRITER, OUTSIDER, ORG, REPO, repository
 
 
@@ -190,7 +190,7 @@ class RefPolicyTests(unittest.TestCase):
             connection.execute(f"PRAGMA application_id={APPLICATION_ID}")
             connection.execute("PRAGMA user_version=4");connection.execute("COMMIT")
         broken = {**MIGRATIONS, 5: (*MIGRATIONS[5], "INVALID SQL")}
-        with patch("gittycat.catalog.MIGRATIONS", broken):
+        with patch("gitcx.catalog.MIGRATIONS", broken):
             with self.assertRaises(sqlite3.OperationalError):Catalog(path)
         with closing(sqlite3.connect(path)) as connection:
             self.assertEqual(connection.execute("PRAGMA user_version").fetchone()[0], 4)
@@ -216,7 +216,7 @@ class RefPolicyNativeTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         if not shutil.which("git"):
-            if os.environ.get("GITTYCAT_REQUIRE_GIT") == "1":raise RuntimeError("native Git oracle is required")
+            if os.environ.get("GITCX_REQUIRE_GIT") == "1":raise RuntimeError("native Git oracle is required")
             raise unittest.SkipTest("native Git is unavailable")
 
     def test_ancestry_decisions_match_native_git_for_both_formats(self):

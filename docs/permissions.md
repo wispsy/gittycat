@@ -1,7 +1,7 @@
 # Domain and permission contracts
 
 ```python
-from gittycat import (
+from gitcx import (
     Action, Owner, OwnerKind, Principal, RepositoryRecord, Slug, StorageId,
     Visibility, allowed,
 )

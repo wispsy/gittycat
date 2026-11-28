@@ -6,9 +6,9 @@ from importlib.metadata import version
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Git-compatible hosting and collaboration")
-    parser.add_argument("--version", action="version", version=f"gittycat {version('gittycat')}")
+    parser.add_argument("--version", action="version", version=f"gitcx {version('gitcx')}")
     commands = parser.add_subparsers(dest="command")
-    serve = commands.add_parser("serve", help="run local management and read-only Git HTTP")
+    serve = commands.add_parser("serve", help="run local management and Git HTTP")
     serve.add_argument("--data-root", required=True)
     serve.add_argument("--port", type=int, default=8000)
     args = parser.parse_args(argv)
@@ -18,6 +18,6 @@ def main(argv: list[str] | None = None) -> int:
             from .management import create_app
         except ModuleNotFoundError as error:
             if error.name != "expose_api":raise
-            parser.error("install gittycat[http] to run the management API")
+            parser.error("install gitcx[http] to run the management API")
         create_app(args.data_root).run(host="127.0.0.1", port=args.port)
     return 0

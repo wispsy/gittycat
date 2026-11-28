@@ -1,10 +1,9 @@
 # Read-only smart HTTP
 
-Current source serves Git discovery and fetch through the existing optional
-Expose API app. The published Gittycat/Gitdx 0.1.0a1 previews predate these
-handlers. Source installs select an immutable Gitdx revision recorded in
-[backend-sources.json](backend-sources.json); [installation.md](installation.md)
-separates that development profile from the released packages.
+This developer preview serves Git discovery and fetch through the optional
+Expose API app. Source and installed profiles select published Gitdx 0.1.0a2,
+recorded with its exact artifacts in [backend-sources.json](backend-sources.json).
+[Installation](installation.md) describes the qualified pairing and index provenance.
 
 The repository URL is `/git/<repository-id>.git`, using the public catalog ID,
 never a storage path or user-supplied filesystem name:
@@ -73,7 +72,7 @@ failures use HTTP status errors. Failures during preparation after headers have
 started send a fixed Git `ERR` packet; failure during output can close the stream.
 Clients must treat an incomplete response as a failed read.
 
-`gittycat serve` remains an explicit loopback development listener. Its transport
+`gitcx serve` remains an explicit loopback development listener. Its transport
 deadline can be shorter than the engine budget. These fixtures do not qualify
 public TLS/proxy deployment, production connection management or arbitrary local
 filesystem writers. Storage retains the owner-controlled provisioning contract.

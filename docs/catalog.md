@@ -15,9 +15,9 @@ checks consistent; SQL prefilters apply the same current read policy before
 bounded pagination. Ordinary organization members gain no implicit private access.
 
 ```python
-from gittycat import Catalog, Principal, Slug
+from gitcx import Catalog, Principal, Slug
 
-with Catalog("data/gittycat.sqlite3") as catalog:
+with Catalog("data/gitcx.sqlite3") as catalog:
     catalog.create_account("1" * 32, Slug("example-user"), now=1700000000)
     assert catalog.list_repositories(Principal("1" * 32)) == ()
 ```

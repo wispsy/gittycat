@@ -31,6 +31,7 @@ class GitdxBackend:
         return path
 
     def _receipt(self, path, storage_id, object_format=None):
+        # Keep the existing on-disk ownership format across the package rename.
         marker=path/"gittycat-owner"
         if marker.is_symlink() or not marker.is_file():raise ProvisioningError("unmanaged repository storage is not adopted")
         with marker.open("rb") as stream:data=stream.read(4097)

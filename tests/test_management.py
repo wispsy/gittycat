@@ -7,14 +7,14 @@ import unittest
 import uuid
 from unittest.mock import patch
 
-from gittycat import Action, Catalog, GitdxBackend, Principal, Slug, TokenAuth
+from gitcx import Action, Catalog, GitdxBackend, Principal, Slug, TokenAuth
 from test_permissions import OWNER, READER, WRITER, OUTSIDER
 
 try:
     from expose_api import HTTPRequest, serve
-    from gittycat.management import create_app
+    from gitcx.management import create_app
 except ImportError:
-    if os.environ.get("GITTYCAT_REQUIRE_HTTP") == "1":raise
+    if os.environ.get("GITCX_REQUIRE_HTTP") == "1":raise
     serve = None
 
 

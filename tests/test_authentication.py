@@ -8,7 +8,7 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-from gittycat import (AccessGrant, Action, AuthenticationError, Catalog, CatalogConflict, CredentialMetadata,
+from gitcx import (AccessGrant, Action, AuthenticationError, Catalog, CatalogConflict, CredentialMetadata,
                      GitdxBackend, Membership, OrganizationRole, Owner, OwnerKind,
                      Permission, PermissionDenied, Principal, RepositoryService, Slug,
                      StorageId, TokenAuth, Visibility, allowed, visible_repositories)
@@ -75,7 +75,7 @@ class AuthenticationTests(unittest.TestCase):
         unknown = "gtc_" + "f" * 32 + "_" + "A" * 43
         rejected = (None, b"secret", "", "\u00e9" * 80, "sensitive" * 1000, unknown, wrong)
         for value in rejected:
-            with patch("gittycat.authentication.hmac.compare_digest", wraps=hmac.compare_digest) as compare:
+            with patch("gitcx.authentication.hmac.compare_digest", wraps=hmac.compare_digest) as compare:
                 with self.assertRaises(AuthenticationError) as error:
                     self.auth.authenticate(value, now=4)
                 self.assertEqual(str(error.exception), "invalid or inactive credential")
@@ -109,7 +109,7 @@ class AuthenticationTests(unittest.TestCase):
         with self.auth.request(token, now=4) as actor:
             with self.assertRaises(PermissionDenied):self.auth.issue(actor, scopes={Action.ADMIN}, expires_at=20, now=4)
         before = self.catalog.pending_jobs()
-        with patch("gittycat.authentication.secrets.token_urlsafe", return_value="A" * 43):
+        with patch("gitcx.authentication.secrets.token_urlsafe", return_value="A" * 43):
             with patch.object(self.catalog, "_event", side_effect=RuntimeError("injected audit failure")):
                 with self.assertRaises(RuntimeError):self.auth.issue(self.owner, scopes={Action.READ}, expires_at=20, now=4)
         self.assertEqual(self.catalog.pending_jobs(), before)
